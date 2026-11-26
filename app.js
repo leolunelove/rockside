@@ -408,3 +408,22 @@ document.getElementById('year').textContent=new Date().getFullYear();
 
 // About remains an ordinary page anchor; audience routes open focused views.
 if (['#talent','#brands','#enquiry'].includes(location.hash)) setEnquiry(true,location.hash==='#talent'?'view-talent':location.hash==='#brands'?'view-brands':'project');
+
+// One intentional scroll effect: readable grey lettering fills with ink as it is read.
+// Native scrolling is untouched. Work only when visible and at most once per frame.
+const inkHeading=document.getElementById('about-title');
+const inkLines=[...inkHeading.querySelectorAll('.reveal-line')];
+let inkFrame=0,inkVisible=false;
+function renderInk(){
+  inkFrame=0;
+  if(motionPreference.matches){document.documentElement.classList.remove('ink-reveal');return;}
+  document.documentElement.classList.add('ink-reveal');
+  const rect=inkHeading.getBoundingClientRect();
+  const progress=Math.max(0,Math.min(1,(innerHeight*.85-rect.top)/Math.max(rect.height,innerHeight*.3)));
+  inkLines.forEach((line,index)=>{const fill=Math.max(0,Math.min(1,progress*inkLines.length-index))*100;line.style.setProperty('--ink-fill',fill+'%');});
+}
+function scheduleInk(){if(!inkFrame&&(inkVisible||motionPreference.matches))inkFrame=requestAnimationFrame(renderInk);}
+const inkObserver=new IntersectionObserver(entries=>{inkVisible=entries[0].isIntersecting;if(inkVisible)scheduleInk();},{rootMargin:'100px'});
+inkObserver.observe(inkHeading);
+window.addEventListener('scroll',scheduleInk,{passive:true});window.addEventListener('resize',scheduleInk);
+motionPreference.addEventListener('change',()=>{renderInk();});
