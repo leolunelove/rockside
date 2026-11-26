@@ -1,0 +1,39 @@
+/* Interaction craft: controlled deceleration, no decorative motion. */
+:root{--motion-ease:cubic-bezier(.22,1,.36,1);--motion-fast:160ms;--motion-state:240ms}
+.button,.audience-route,.service-action,.discipline-tabs button,.menu-toggle,.enquiry-close{transition:background-color var(--motion-state) var(--motion-ease),color var(--motion-state) var(--motion-ease),border-color var(--motion-state) var(--motion-ease),transform var(--motion-state) var(--motion-ease),box-shadow var(--motion-state) var(--motion-ease)}
+.button:hover,.audience-route:hover,.service:hover,.discipline-art:hover>span:first-child{transform:none}
+.button:hover{box-shadow:none}.service{transition:none}
+.button:hover .button-plus,.service:hover .service-action{transform:none}
+.button:active,.audience-route:active,.service-action:active,.enquiry-close:active,.menu-toggle:active{transform:scale(.985);transition-duration:70ms}
+.button-plus{transition:none}.service-action{min-width:3rem;min-height:3rem}
+.discipline-tabs button{border-radius:12px;min-height:3.5rem}
+.discipline-tabs button span{transition:transform var(--motion-state) var(--motion-ease),color var(--motion-state)}
+.discipline-copy h3{min-height:2.05em}.discipline-copy p{min-height:6.8em}
+.discipline-copy .tags{min-height:2.4rem}.discipline-copy .text-link{min-height:3rem}
+.accordion details{overflow:hidden;overflow:clip}
+.accordion summary{min-height:4.75rem;touch-action:manipulation}
+.accordion-plus{transition:transform var(--motion-state) var(--motion-ease)}
+.accordion summary[aria-expanded=true] .accordion-plus{transform:rotate(45deg)}
+.accordion summary[aria-expanded=false] .accordion-plus{transform:rotate(0)}
+.enquiry-view{backface-visibility:hidden}
+.enquiry-close{min-width:5rem;min-height:3rem;border-radius:999px}
+.enquiry-heading h2{scroll-margin-top:8rem}
+@media(hover:hover){
+ .audience-route:hover{box-shadow:inset 0 0 0 1px #20211f35}.route-talent:hover{box-shadow:inset 0 0 0 1px #ffffff50}
+ .enquiry-close:hover{background:var(--soft)}
+}
+@media(max-width:760px){
+ html.menu-open{overflow:hidden;scroll-behavior:auto}
+ .header{position:relative;z-index:91}
+ .mobile-menu{position:fixed;z-index:90;top:6rem;left:var(--gutter);right:var(--gutter);bottom:max(1rem,env(safe-area-inset-bottom));width:auto;margin:0;padding:clamp(1.5rem,5vw,3rem);border-radius:var(--radius);overflow:auto;overscroll-behavior:contain;display:flex;flex-direction:column;justify-content:center;gap:1rem;box-shadow:0 1rem 3rem #20211f18}
+ .mobile-menu a,.mobile-menu button{font-size:clamp(1.75rem,7vw,3rem);line-height:1.3;padding:1rem 0;min-height:3rem}
+ .mobile-menu button{color:var(--lime)}
+ .mobile-menu a+a{border-top:1px solid #ffffff22}
+ .discipline-copy p{min-height:8.5em}
+ .menu-toggle{min-height:3rem;min-width:4.5rem}
+}
+@media(prefers-reduced-motion:reduce){
+ html{scroll-behavior:auto}
+ .button:active,.audience-route:active,.service-action:active,.enquiry-close:active,.menu-toggle:active{transform:none}
+}
+.accordion summary:focus-visible{outline-offset:-4px}

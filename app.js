@@ -1,62 +1,239 @@
 const disciplines={models:{word:'MODELS',kicker:'Beyond the first impression',title:'PRESENCE THAT<br>STAYS WITH YOU.',description:'Distinctive faces and individual character. Representation for fashion, editorial and commercial opportunities.',tags:['Fashion','Editorial','Commercial'],cta:'Enquire about modelling',note:'Presence. Personality. Perspective.'},actors:{word:'ACTORS',kicker:'There’s more to the story',title:'CHARACTER.<br>IN EVERY SENSE.',description:'Individual voices, compelling performances and people who bring a story to life. Representation for screen, stage and commercial work.',tags:['Screen','Stage','Commercial'],cta:'Enquire about acting',note:'Character. Voice. Connection.'},creators:{word:'CREATORS',kicker:'A point of view worth sharing',title:'YOUR VOICE.<br>A WIDER REACH.',description:'Original ideas and distinctive perspectives. Connecting creators with thoughtful brand partnerships and content opportunities.',tags:['Content','Partnerships','Campaigns'],cta:'Enquire about creating',note:'Ideas. Originality. Impact.'}};
-let selected='models';const tabs=[...document.querySelectorAll('[data-discipline]')];function selectDiscipline(key,focus=false){selected=key;const d=disciplines[key];tabs.forEach(t=>{const yes=t.dataset.discipline===key;t.setAttribute('aria-selected',yes);t.tabIndex=yes?0:-1;if(yes&&focus)t.focus()});document.getElementById('discipline-panel').setAttribute('aria-labelledby','tab-'+key);document.getElementById('discipline-word').textContent=d.word;document.getElementById('discipline-kicker').textContent=d.kicker;document.getElementById('discipline-title').innerHTML=d.title;document.getElementById('discipline-description').textContent=d.description;document.querySelector('.discipline-note').textContent=d.note;document.getElementById('discipline-tags').replaceChildren(...d.tags.map(tag=>{const s=document.createElement('span');s.textContent=tag;return s}));document.getElementById('discipline-cta').firstChild.textContent=d.cta+' ';}tabs.forEach((t,i)=>{t.addEventListener('click',()=>selectDiscipline(t.dataset.discipline));t.addEventListener('keydown',e=>{let n;if(e.key==='ArrowRight')n=(i+1)%tabs.length;if(e.key==='ArrowLeft')n=(i+tabs.length-1)%tabs.length;if(e.key==='Home')n=0;if(e.key==='End')n=tabs.length-1;if(n!==undefined){e.preventDefault();selectDiscipline(tabs[n].dataset.discipline,true)}})});
-const menu=document.querySelector('.menu-toggle'),mobileMenu=document.getElementById('mobile-menu');menu.addEventListener('click',()=>{const open=menu.getAttribute('aria-expanded')==='true';menu.setAttribute('aria-expanded',!open);mobileMenu.hidden=open});mobileMenu.querySelectorAll('a,button').forEach(a=>a.addEventListener('click',()=>{mobileMenu.hidden=true;menu.setAttribute('aria-expanded','false')}));document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!mobileMenu.hidden){mobileMenu.hidden=true;menu.setAttribute('aria-expanded','false');menu.focus()}});
-// Full-screen enquiry, with browser history and native compositor motion.
-const enquiry=document.getElementById('enquiry-view'),form=document.getElementById('enquiry-form');
-const motionPreference=matchMedia('(prefers-reduced-motion: reduce)');
-const background=[...document.body.children].filter(el=>el!==enquiry&&el.tagName!=='SCRIPT');
-let previousFocus,viewState='closed',viewAnimation,savedScroll=0,ownsEnquiryHistory=false,transitionVersion=0;
-const originalBackground=background.map(el=>({el,inert:el.hasAttribute('inert'),aria:el.getAttribute('aria-hidden')}));
-function setBackgroundLocked(locked){originalBackground.forEach(({el,inert,aria})=>{if(locked){el.setAttribute('inert','');el.setAttribute('aria-hidden','true')}else{if(!inert)el.removeAttribute('inert');if(aria===null)el.removeAttribute('aria-hidden');else el.setAttribute('aria-hidden',aria)}})}
-function configureEnquiry(type){
- const talent=type==='talent';
- form.elements.interest.value=talent?'Representation':({casting:'Casting & bookings',creators:'Creator partnerships',campaign:'Campaign coordination'}[type]||'Casting & bookings');
- document.getElementById('enquiry-title').innerHTML=talent?'YOUR WIDER<br>STAGE.':'LET’S<br>TALK.';
- document.getElementById('enquiry-intro').textContent=talent?'Introduce yourself and tell us about your discipline, experience and work.':'Tell us about the idea, the people you need and where you want to take it.';
- form.elements.brief.placeholder=talent?'Your discipline, experience and portfolio links.':'Your project, timing, location and budget, if known.';
- document.getElementById('form-status').hidden=true;
+// One motion language. Every retarget starts from the rendered presentation value.
+const motionPreference = matchMedia('(prefers-reduced-motion: reduce)');
+const moving = new Map();
+const easing = 'cubic-bezier(.22,1,.36,1)';
+async function animateTo(element, target, duration = 280) {
+  const style = getComputedStyle(element);
+  const from = Object.fromEntries(Object.keys(target).map(key => [key, style[key]]));
+  moving.get(element)?.cancel();
+  Object.assign(element.style, from);
+  if (motionPreference.matches || duration === 0 || !element.animate) {
+    Object.assign(element.style, target);
+    moving.delete(element);
+    return true;
+  }
+  const animation = element.animate([from, target], { duration, easing, fill: 'both' });
+  moving.set(element, animation);
+  try { await animation.finished; } catch { return false; }
+  if (moving.get(element) !== animation) return false;
+  Object.assign(element.style, target);
+  moving.delete(element);
+  animation.cancel();
+  return true;
 }
-async function animateEnquiry(open){
- viewAnimation?.cancel();
- if(motionPreference.matches)return;
- const animation=enquiry.animate(open?[{transform:'translateY(100%)'},{transform:'translateY(0)'}]:[{transform:'translateY(0)'},{transform:'translateY(-4%)',opacity:0}],{duration:open?650:360,easing:open?'cubic-bezier(.22,1,.36,1)':'cubic-bezier(.4,0,1,1)'});
- viewAnimation=animation;try{await animation.finished}catch{};
-}
-async function openEnquiry(type='project',addHistory=true){
- if(viewState==='open'||viewState==='opening')return;
- const version=++transitionVersion;
- if(viewState==='closed'){previousFocus=document.activeElement;savedScroll=window.scrollY;}
- configureEnquiry(type);
- viewState='opening';enquiry.hidden=false;enquiry.scrollTop=0;
- setBackgroundLocked(true);document.documentElement.classList.add('enquiry-open');
- if(addHistory){history.pushState({rocksideEnquiry:true,type},'', '#enquiry');ownsEnquiryHistory=true;}
- document.getElementById('enquiry-title').focus({preventScroll:true});
- await animateEnquiry(true);if(version===transitionVersion)viewState='open';
-}
-async function closeEnquiry(){
- if(viewState==='closed'||viewState==='closing')return;
- const version=++transitionVersion;viewState='closing';await animateEnquiry(false);
- if(version!==transitionVersion)return;
- enquiry.hidden=true;setBackgroundLocked(false);document.documentElement.classList.remove('enquiry-open');
- window.scrollTo({top:savedScroll,behavior:'instant'});previousFocus?.focus({preventScroll:true});viewState='closed';ownsEnquiryHistory=false;
-}
-function requestEnquiryClose(){
- if(viewState==='closed'||viewState==='closing')return;
- const goBack=ownsEnquiryHistory;ownsEnquiryHistory=false;closeEnquiry();
- if(goBack)history.back();else history.replaceState(null,'',location.pathname+location.search);
-}
-document.querySelectorAll('[data-enquire]').forEach(b=>b.addEventListener('click',()=>openEnquiry(b.dataset.enquire)));
-document.querySelectorAll('[data-close-enquiry]').forEach(b=>b.addEventListener('click',e=>{e.preventDefault();requestEnquiryClose()}));
-window.addEventListener('popstate',()=>{if(location.hash==='#enquiry'){ownsEnquiryHistory=!!history.state?.rocksideEnquiry;openEnquiry(history.state?.type||'project',false)}else closeEnquiry()});
-enquiry.addEventListener('keydown',e=>{
- if(e.key==='Escape'){e.preventDefault();requestEnquiryClose()}
- if(e.key==='Tab'){
-  const focusable=[...enquiry.querySelectorAll('a,button,input,select,textarea')].filter(el=>!el.disabled);
-  const first=focusable[0],last=focusable.at(-1);
-  if(e.shiftKey&&(document.activeElement===first||document.activeElement===document.getElementById('enquiry-title'))){e.preventDefault();last.focus()}
-  else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus()}
- }
+motionPreference.addEventListener('change', () => {
+  if (motionPreference.matches) [...moving.values()].forEach(animation => animation.finish());
 });
-motionPreference.addEventListener('change',()=>{if(motionPreference.matches)viewAnimation?.finish()});
-if(location.hash==='#enquiry')openEnquiry('project',false);
-form.addEventListener('submit',e=>{e.preventDefault();if(!form.reportValidity())return;const d=new FormData(form);const text=['ROCKSIDE TALENT / ENQUIRY','',`Name: ${d.get('name')}`,`Email: ${d.get('email')}`,`Interest: ${d.get('interest')}`,`Discipline viewed: ${disciplines[selected].word}`,'',String(d.get('brief')),'','Prepared locally. This enquiry has not been sent.'].join('\n');const u=URL.createObjectURL(new Blob([text],{type:'text/plain;charset=utf-8'}));const a=document.createElement('a');a.href=u;a.download='Rockside-Enquiry.txt';a.click();setTimeout(()=>URL.revokeObjectURL(u),1000);document.getElementById('form-status').hidden=false});document.getElementById('year').textContent=new Date().getFullYear();document.querySelectorAll('.accordion details').forEach(d=>d.addEventListener('toggle',()=>{if(d.open)document.querySelectorAll('.accordion details').forEach(other=>{if(other!==d)other.open=false})}));
+
+// Immediate tab selection, a quiet content dissolve, and reserved content space.
+let selected = 'models', renderedDiscipline = 'models';
+const tabs = [...document.querySelectorAll('[data-discipline]')];
+const disciplinePanel = document.getElementById('discipline-panel');
+const disciplineWord = document.getElementById('discipline-word');
+const disciplineCopy = document.querySelector('.discipline-copy');
+function renderDiscipline(key) {
+  const d = disciplines[key];
+  renderedDiscipline = key;
+  disciplineWord.textContent = d.word;
+  document.getElementById('discipline-kicker').textContent = d.kicker;
+  document.getElementById('discipline-title').innerHTML = d.title;
+  document.getElementById('discipline-description').textContent = d.description;
+  document.querySelector('.discipline-note').textContent = d.note;
+  document.getElementById('discipline-tags').replaceChildren(...d.tags.map(tag => {
+    const span = document.createElement('span'); span.textContent = tag; return span;
+  }));
+  document.getElementById('discipline-cta').firstChild.textContent = d.cta + ' ';
+}
+let tabVersion = 0;
+async function selectDiscipline(key, focus = false) {
+  tabs.forEach(tab => {
+    const active = tab.dataset.discipline === key;
+    tab.setAttribute('aria-selected', active); tab.tabIndex = active ? 0 : -1;
+    if (active && focus) tab.focus({preventScroll:true});
+  });
+  if (key === selected) return;
+  selected = key;
+  const version = ++tabVersion;
+  // Keep the current text in place while it fades; rapid changes coalesce.
+  await Promise.all([animateTo(disciplineCopy, {opacity: '.12'}, 85), animateTo(disciplineWord, {opacity: '.12'}, 85)]);
+  if (version !== tabVersion) return;
+  renderDiscipline(key);
+  disciplinePanel.setAttribute('aria-labelledby', 'tab-' + key);
+  await Promise.all([animateTo(disciplineCopy, {opacity: '1'}, 200), animateTo(disciplineWord, {opacity: '1'}, 200)]);
+}
+tabs.forEach((tab, index) => {
+  tab.addEventListener('click', () => selectDiscipline(tab.dataset.discipline));
+  tab.addEventListener('keydown', event => {
+    const next = {ArrowRight:(index+1)%tabs.length, ArrowLeft:(index+tabs.length-1)%tabs.length, Home:0, End:tabs.length-1}[event.key];
+    if (next !== undefined) {event.preventDefault(); selectDiscipline(tabs[next].dataset.discipline, true);}
+  });
+});
+
+// Measure the three real copy sets at the current width, not guessed fixed heights.
+let measuredCopyWidth = 0;
+function reserveDisciplineSpace(force = false) {
+  const width = disciplineCopy.getBoundingClientRect().width;
+  if (!width || (!force && Math.abs(width - measuredCopyWidth) < 1)) return;
+  measuredCopyWidth = width;
+  const selectors = ['.eyebrow','h3','p','.tags','.text-link'];
+  const maxima = selectors.map(() => 0);
+  const measure = disciplineCopy.cloneNode(true);
+  measure.querySelectorAll('[id]').forEach(element => element.removeAttribute('id'));
+  measure.setAttribute('aria-hidden','true'); measure.setAttribute('inert','');
+  Object.assign(measure.style, {position:'absolute',left:'0',top:'0',width:width+'px',visibility:'hidden',pointerEvents:'none',opacity:'1',height:'auto',minHeight:'0'});
+  selectors.forEach(selector => measure.querySelector(selector).style.minHeight = '0');
+  disciplinePanel.append(measure);
+  Object.values(disciplines).forEach(d => {
+    measure.querySelector('.eyebrow').textContent = d.kicker;
+    measure.querySelector('h3').innerHTML = d.title;
+    measure.querySelector('p').textContent = d.description;
+    measure.querySelector('.tags').replaceChildren(...d.tags.map(text => {const span=document.createElement('span');span.textContent=text;return span;}));
+    measure.querySelector('.text-link').firstChild.textContent = d.cta + ' ';
+    selectors.forEach((selector,index) => maxima[index] = Math.max(maxima[index],measure.querySelector(selector).getBoundingClientRect().height));
+  });
+  measure.remove();
+  selectors.forEach((selector,index) => disciplineCopy.querySelector(selector).style.minHeight = maxima[index]+'px');
+}
+new ResizeObserver(() => reserveDisciplineSpace()).observe(disciplineCopy);
+document.fonts.ready.then(() => reserveDisciplineSpace(true));
+
+// Cache original background attributes so opening views never leak focus.
+const enquiry = document.getElementById('enquiry-view');
+const form = document.getElementById('enquiry-form');
+const menu = document.querySelector('.menu-toggle');
+const mobileMenu = document.getElementById('mobile-menu');
+const narrowScreen = matchMedia('(max-width: 760px)');
+const background = [...document.body.children].filter(element => element !== enquiry && element.tagName !== 'SCRIPT');
+const originals = new Map(background.map(element => [element, {inert:element.hasAttribute('inert'), aria:element.getAttribute('aria-hidden')}]));
+function lockElements(elements, locked) {
+  elements.forEach(element => {
+    const original = originals.get(element);
+    if (locked) {element.setAttribute('inert',''); element.setAttribute('aria-hidden','true');}
+    else {if (!original.inert) element.removeAttribute('inert'); if (original.aria === null) element.removeAttribute('aria-hidden'); else element.setAttribute('aria-hidden', original.aria);}
+  });
+}
+const menuBackground = [document.querySelector('main'), document.querySelector('footer')];
+let menuOpen = false, menuVersion = 0;
+async function setMenu(open, restoreFocus = true, instant = false) {
+  if (open === menuOpen) return;
+  menuOpen = open; const version = ++menuVersion;
+  menu.setAttribute('aria-expanded', String(open));
+  if (open) {
+    mobileMenu.hidden = false;
+    mobileMenu.removeAttribute('inert');
+    lockElements(menuBackground, true);
+    document.documentElement.classList.add('menu-open');
+    if (!moving.has(mobileMenu)) Object.assign(mobileMenu.style, {opacity:'0', transform:'translateY(-12px)'});
+  } else mobileMenu.setAttribute('inert','');
+  const done = await animateTo(mobileMenu, {opacity:open?'1':'0', transform:open?'translateY(0)':'translateY(-12px)'}, instant?0:open?300:220);
+  if (!done || version !== menuVersion) return;
+  if (!open) {
+    mobileMenu.hidden = true; lockElements(menuBackground, false);
+    document.documentElement.classList.remove('menu-open');
+    if (restoreFocus) menu.focus({preventScroll:true});
+  }
+}
+menu.addEventListener('click', () => setMenu(!menuOpen));
+document.querySelector('.header .brand').addEventListener('click', () => {if (menuOpen) setMenu(false, false, true);});
+mobileMenu.querySelectorAll('a').forEach(link => link.addEventListener('click', () => setMenu(false, false, true)));
+narrowScreen.addEventListener('change', () => {if (!narrowScreen.matches) setMenu(false, false, true);});
+document.addEventListener('keydown', event => {
+  if (!menuOpen) return;
+  if (event.key === 'Escape') {event.preventDefault(); setMenu(false);}
+  if (event.key === 'Tab') {
+    const last = mobileMenu.querySelector('button');
+    if (event.shiftKey && document.activeElement === menu) {event.preventDefault(); last.focus();}
+    else if (!event.shiftKey && document.activeElement === last) {event.preventDefault(); menu.focus();}
+  }
+});
+
+// Full-screen enquiry: one travel path in both directions, live-value reversal.
+let previousFocus, savedScroll = 0, enquiryOpen = false, enquiryVersion = 0, ownsEnquiryHistory = false;
+function configureEnquiry(type) {
+  const talent = type === 'talent';
+  form.elements.interest.value = talent ? 'Representation' : ({casting:'Casting & bookings', creators:'Creator partnerships', campaign:'Campaign coordination'}[type] || 'Casting & bookings');
+  document.getElementById('enquiry-title').innerHTML = talent ? 'YOUR WIDER<br>STAGE.' : 'LET’S<br>TALK.';
+  document.getElementById('enquiry-intro').textContent = talent ? 'Introduce yourself and tell us about your discipline, experience and work.' : 'Tell us about the idea, the people you need and where you want to take it.';
+  form.elements.brief.placeholder = talent ? 'Your discipline, experience and portfolio links.' : 'Your project, timing, location and budget, if known.';
+  document.getElementById('form-status').hidden = true;
+}
+async function setEnquiry(open, type = 'project', addHistory = false) {
+  if (open === enquiryOpen && !enquiry.hidden) return;
+  if (!open && enquiry.hidden) return;
+  const version = ++enquiryVersion;
+  const restoreCandidate = mobileMenu.contains(document.activeElement) ? menu : document.activeElement;
+  enquiryOpen = open;
+  if (open) {
+    if (menuOpen) await setMenu(false, false, true);
+    if (enquiry.hidden) {
+      previousFocus = restoreCandidate; savedScroll = window.scrollY;
+      enquiry.hidden = false; enquiry.scrollTop = 0; enquiry.style.transform = 'translateY(100%)';
+    }
+    configureEnquiry(type);
+    lockElements(background, true); document.documentElement.classList.add('enquiry-open');
+    if (addHistory) {history.pushState({rocksideEnquiry:true,type}, '', '#enquiry'); ownsEnquiryHistory = true;}
+    document.getElementById('enquiry-title').focus({preventScroll:true});
+  }
+  const height = enquiry.getBoundingClientRect().height;
+  const currentY = enquiry.getBoundingClientRect().top;
+  const distance = Math.abs((open ? 0 : height) - currentY) / Math.max(1,height);
+  const done = await animateTo(enquiry, {transform:open?'translateY(0)':'translateY(100%)'}, Math.max(90, (open?620:420)*distance));
+  if (!done || version !== enquiryVersion) return;
+  if (!open) {
+    enquiry.hidden = true; lockElements(background, false);
+    document.documentElement.classList.remove('enquiry-open');
+    window.scrollTo({top:savedScroll,behavior:'instant'});
+    previousFocus?.focus({preventScroll:true});
+  }
+}
+function requestEnquiryClose() {
+  if (!enquiryOpen) return;
+  setEnquiry(false);
+  if (ownsEnquiryHistory) {ownsEnquiryHistory = false; history.back();}
+  else history.replaceState(null, '', location.pathname + location.search);
+}
+document.querySelectorAll('[data-enquire]').forEach(button => button.addEventListener('click', () => setEnquiry(true, button.dataset.enquire, true)));
+document.querySelectorAll('[data-close-enquiry]').forEach(button => button.addEventListener('click', event => {event.preventDefault(); requestEnquiryClose();}));
+window.addEventListener('popstate', () => {
+  const open = location.hash === '#enquiry';
+  ownsEnquiryHistory = open && !!history.state?.rocksideEnquiry;
+  setEnquiry(open, history.state?.type || 'project');
+});
+enquiry.addEventListener('keydown', event => {
+  if (event.key === 'Escape') {event.preventDefault(); requestEnquiryClose();}
+  if (event.key === 'Tab') {
+    const focusable = [...enquiry.querySelectorAll('a,button,input,select,textarea')].filter(element => !element.disabled);
+    const first = focusable[0], last = focusable.at(-1);
+    if (event.shiftKey && (document.activeElement === first || document.activeElement.id === 'enquiry-title')) {event.preventDefault(); last.focus();}
+    else if (!event.shiftKey && document.activeElement === last) {event.preventDefault(); first.focus();}
+  }
+});
+if (location.hash === '#enquiry') setEnquiry(true);
+
+// Native details semantics; height is the sole intentional layout animation.
+const accordionItems = [...document.querySelectorAll('.accordion details')];
+const accordionTargets = new WeakMap();
+async function setAccordion(details, open) {
+  accordionTargets.set(details, open);
+  const summary = details.querySelector('summary');
+  const content = details.querySelector('.detail-content');
+  const currentHeight = details.getBoundingClientRect().height;
+  details.style.height = currentHeight + 'px'; details.open = true;
+  summary.setAttribute('aria-expanded', String(open));
+  content.toggleAttribute('inert', !open);
+  const target = summary.getBoundingClientRect().height + (open ? content.getBoundingClientRect().height : 0) + 1;
+  const done = await animateTo(details, {height:target+'px'}, 300);
+  if (!done || accordionTargets.get(details) !== open) return;
+  details.open = open; details.style.height = '';
+}
+accordionItems.forEach(details => {
+  accordionTargets.set(details, details.open);
+  details.querySelector('summary').setAttribute('aria-expanded',String(details.open));
+  details.querySelector('summary').addEventListener('click', event => {
+    event.preventDefault(); const open = !accordionTargets.get(details);
+    if (open) accordionItems.forEach(other => {if (other !== details && accordionTargets.get(other)) setAccordion(other,false);});
+    setAccordion(details,open);
+  });
+});
+form.addEventListener('submit',e=>{e.preventDefault();if(!form.reportValidity())return;const d=new FormData(form);const text=['ROCKSIDE TALENT / ENQUIRY','',`Name: ${d.get('name')}`,`Email: ${d.get('email')}`,`Interest: ${d.get('interest')}`,`Discipline viewed: ${disciplines[renderedDiscipline].word}`,'',String(d.get('brief')),'','Prepared locally. This enquiry has not been sent.'].join('\n');const u=URL.createObjectURL(new Blob([text],{type:'text/plain;charset=utf-8'}));const a=document.createElement('a');a.href=u;a.download='Rockside-Enquiry.txt';a.click();setTimeout(()=>URL.revokeObjectURL(u),1000);document.getElementById('form-status').hidden=false});document.getElementById('year').textContent=new Date().getFullYear();
