@@ -99,6 +99,14 @@ const form = document.getElementById('enquiry-form');
 const menu = document.querySelector('.menu-toggle');
 const mobileMenu = document.getElementById('mobile-menu');
 const narrowScreen = matchMedia('(max-width: 760px)');
+// The root reserves a scrollbar even when locked. Let the focused view own the
+// same single gutter instead of narrowing its content by a second scrollbar.
+function syncViewGutter() {
+  const reserved = Math.max(0, innerWidth - document.documentElement.getBoundingClientRect().width);
+  enquiry.style.setProperty('--root-gutter', reserved + 'px');
+}
+syncViewGutter();
+window.addEventListener('resize', syncViewGutter);
 function syncTabOrientation(){document.querySelector('.discipline-tabs').setAttribute('aria-orientation',narrowScreen.matches?'horizontal':'vertical');}
 syncTabOrientation();narrowScreen.addEventListener('change',syncTabOrientation);
 const background = [...document.body.children].filter(element => element !== enquiry && element.tagName !== 'SCRIPT');
@@ -155,15 +163,21 @@ let activeView = null;
 const viewScroll = new Map();
 const viewFocus = new Map();
 const routeFor = type => type === 'view-talent' ? '#talent' : type === 'view-brands' ? '#brands' : '#enquiry';
+const enquiryInterests = new Map();
+function rememberEnquiryInterest() {
+  if (activeView && !activeView.startsWith('view-')) enquiryInterests.set(activeView, form.elements.interest.value);
+}
 function configureEnquiry(type) {
   const talent = type === 'talent';
-  form.elements.interest.value = talent ? 'Representation' : ({casting:'Casting & bookings', creators:'Creator partnerships', campaign:'Campaign coordination'}[type] || 'Casting & bookings');
+  form.elements.interest.value = enquiryInterests.get(type) || (talent ? 'Representation' : ({casting:'Casting & bookings', creators:'Creator partnerships', campaign:'Campaign coordination'}[type] || 'Casting & bookings'));
   document.getElementById('enquiry-intro').textContent = talent ? 'Tell us about your work and where you’d like to go.' : 'Tell us what you have in mind. We’ll get back to you by email.';
   form.elements.brief.placeholder = talent ? 'Your discipline, experience and portfolio links.' : 'Your project, timing, location and budget, if known.';
   document.getElementById('form-heading').textContent = talent ? 'Your introduction' : 'Your enquiry';
   resetFormFeedback();
 }
+form.elements.interest.addEventListener('change', rememberEnquiryInterest);
 function configureView(type) {
+  rememberEnquiryInterest();
   const audience = type.startsWith('view-');
   audienceView.hidden = !audience; contactLayout.hidden = audience;
   talentView.hidden = type !== 'view-talent'; brandsView.hidden = type !== 'view-brands';
@@ -239,7 +253,7 @@ async function setEnquiry(open, type = 'project', addHistory = false) {
     (remembered?.isConnected && remembered.getClientRects().length ? remembered : title).focus({preventScroll:true});
     // Internal routes replace discrete content in place; no opacity flash.
 
-  } else enquiryOpen = false;
+  } else {rememberEnquiryInterest(); enquiryOpen = false;}
   const done = await springTravel(open?0:100);
   if (!done || version !== enquiryVersion) return;
   if (open && !enquiry.contains(document.activeElement)) {
