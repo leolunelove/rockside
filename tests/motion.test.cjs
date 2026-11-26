@@ -4,7 +4,7 @@ const {readFileSync} = require('node:fs');
 const vm = require('node:vm');
 const path = require('node:path');
 const source = readFileSync(path.join(__dirname,'../app.js'),'utf8');
-const helper = source.slice(source.indexOf('const motionPreference'),source.indexOf('// Immediate tab selection'));
+const helper = source.slice(source.indexOf('const motionPreference'),source.indexOf('// Immediate discipline selection'));
 function fixture(reduced = false) {
   let change;
   const preference = {matches:reduced,addEventListener:(_,handler)=>change=handler};

@@ -26,7 +26,7 @@ motionPreference.addEventListener('change', () => {
   if (motionPreference.matches) [...moving.values()].forEach(animation => animation.finish());
 });
 
-// Immediate tab selection, a quiet content dissolve, and reserved content space.
+// Immediate discipline selection and reserved content space.
 let selected = 'models', renderedDiscipline = 'models';
 const tabs = [...document.querySelectorAll('[data-discipline]')];
 const disciplinePanel = document.getElementById('discipline-panel');
@@ -45,8 +45,7 @@ function renderDiscipline(key) {
   }));
   document.getElementById('discipline-cta').firstChild.textContent = d.cta + ' ';
 }
-let tabVersion = 0;
-async function selectDiscipline(key, focus = false) {
+function selectDiscipline(key, focus = false) {
   tabs.forEach(tab => {
     const active = tab.dataset.discipline === key;
     tab.setAttribute('aria-selected', active); tab.tabIndex = active ? 0 : -1;
@@ -54,13 +53,9 @@ async function selectDiscipline(key, focus = false) {
   });
   if (key === selected) return;
   selected = key;
-  const version = ++tabVersion;
-  // Keep the current text in place while it fades; rapid changes coalesce.
-  await Promise.all([animateTo(disciplineCopy, {opacity: '.12'}, 85), animateTo(disciplineWord, {opacity: '.12'}, 85)]);
-  if (version !== tabVersion) return;
+  // Discrete reading content updates immediately; no fade or queued intermediate state.
   renderDiscipline(key);
   disciplinePanel.setAttribute('aria-labelledby', 'tab-' + key);
-  await Promise.all([animateTo(disciplineCopy, {opacity: '1'}, 200), animateTo(disciplineWord, {opacity: '1'}, 200)]);
 }
 tabs.forEach((tab, index) => {
   tab.addEventListener('click', () => selectDiscipline(tab.dataset.discipline));
@@ -126,9 +121,9 @@ async function setMenu(open, restoreFocus = true, instant = false) {
     mobileMenu.removeAttribute('inert');
     lockElements(menuBackground, true);
     document.documentElement.classList.add('menu-open');
-    if (!moving.has(mobileMenu)) Object.assign(mobileMenu.style, {opacity:'0', transform:'translateY(-12px)'});
+    if (!moving.has(mobileMenu)) Object.assign(mobileMenu.style, {opacity:'0', transform:'translateY(-8px)'});
   } else mobileMenu.setAttribute('inert','');
-  const done = await animateTo(mobileMenu, {opacity:open?'1':'0', transform:open?'translateY(0)':'translateY(-12px)'}, instant?0:open?300:220);
+  const done = await animateTo(mobileMenu, {opacity:open?'1':'0', transform:open?'translateY(0)':'translateY(-8px)'}, instant?0:open?220:160);
   if (!done || version !== menuVersion) return;
   if (!open) {
     mobileMenu.hidden = true; lockElements(menuBackground, false);
@@ -183,7 +178,7 @@ function configureView(type) {
   return title;
 }
 // Critically damped analytic spring: position AND velocity survive every retarget.
-function springStep(position, velocity, target, seconds, omega = 20) {
+function springStep(position, velocity, target, seconds, omega = 24) {
   const displacement = position - target;
   const carry = velocity + omega * displacement;
   const decay = Math.exp(-omega * seconds);
@@ -242,12 +237,8 @@ async function setEnquiry(open, type = 'project', addHistory = false) {
     document.querySelector('.enquiry-close').classList.toggle('is-back',isBack);
     const remembered = !addHistory && viewFocus.get(type);
     (remembered?.isConnected && remembered.getClientRects().length ? remembered : title).focus({preventScroll:true});
-    // Changing content keeps its position; the user never waits for a closing animation.
-    if (switching) {
-      const content = type.startsWith('view-') ? audienceView : contactLayout;
-      if (!moving.has(content)) content.style.opacity = '.8';
-      animateTo(content,{opacity:'1'},160);
-    }
+    // Internal routes replace discrete content in place; no opacity flash.
+
   } else enquiryOpen = false;
   const done = await springTravel(open?0:100);
   if (!done || version !== enquiryVersion) return;
@@ -302,7 +293,7 @@ async function setAccordion(details, open) {
   summary.setAttribute('aria-expanded', String(open));
   content.toggleAttribute('inert', !open);
   const target = summary.getBoundingClientRect().height + (open ? content.getBoundingClientRect().height : 0) + 1;
-  const done = await animateTo(details, {height:target+'px'}, 300);
+  const done = await animateTo(details, {height:target+'px'}, 240);
   if (!done || accordionTargets.get(details) !== open) return;
   details.open = open; details.style.height = '';
 }

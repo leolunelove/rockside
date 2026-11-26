@@ -85,3 +85,13 @@
 @media(prefers-reduced-motion:reduce){.view-navigation button{transition:none}}
 
 .audience-view h2[tabindex="-1"]:focus{outline:none}
+/* Hierarchy before motion: one route per audience and one primary content action. */
+.audience-routes{margin-top:clamp(2.5rem,4.5vw,5rem)}
+.editorial-talent .discipline-copy h3{font-size:clamp(2rem,3.25cqi,4rem)}
+.editorial-talent .discipline-copy .button.primary{background:var(--lime);color:var(--ink);border:0;padding:.9rem 1.4rem;border-radius:999px;min-height:2.75rem;font-size:1rem;gap:1.5rem}
+.editorial-talent .discipline-copy .button.primary:hover{background:#b8e91b;color:var(--ink)}
+.brand-intro .button{margin-top:1.5rem;min-height:2.75rem;font-size:1rem}
+.process .section-heading h2{font:500 clamp(1.75rem,2.5cqi,3rem)/1.15 Arial,Helvetica,sans-serif;letter-spacing:-.04em}
+@media(max-width:760px){.audience-view .talent-intro{padding-block:1rem 1.25rem;gap:.75rem}.talent-stage{gap:.5rem}.editorial-talent .discipline-copy h3{font-size:clamp(2rem,8.5cqi,3.25rem);margin-bottom:1rem}.editorial-talent .tags{margin-block:1rem}.editorial-talent .discipline-copy p{line-height:1.6}}
+
+.editorial-talent .discipline-tabs button{transition:none}
