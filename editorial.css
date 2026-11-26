@@ -39,3 +39,49 @@
 .editorial-about .about-story h2{font-size:clamp(2.75rem,5.4cqi,6rem)}
 @media(max-width:760px){.audience-view .talent-intro h2,.audience-view .brand-intro h2{font-size:clamp(3rem,12cqi,5rem)}.audience-view .talent-intro{gap:1.25rem}.audience-view .enquiry-top{padding-block:1rem}.service-row{grid-template-columns:1fr 3rem}.service-row>div{grid-column:1/3;grid-row:2}.service-arrow{grid-column:2}.audience-routes{gap:1rem}.audience-route{min-height:8rem}.audience-view .process{margin-top:2rem}.editorial-about .about-story h2{font-size:clamp(2.5rem,10.5cqi,4rem)}}
 @media(prefers-reduced-motion:reduce){.audience-route:active{transform:none}.enquiry-view.show-audience .enquiry-top{backdrop-filter:none;-webkit-backdrop-filter:none}}
+/* Craft pass: explicit location, adaptive discipline controls, consistent states. */
+:root{--focus-ring:#4b6500;--control-radius:.75rem}
+:is(a,button,summary,input,select,textarea):focus-visible{outline:2px solid var(--focus-ring);outline-offset:5px}
+.show-talent{--focus-ring:var(--lime);color-scheme:dark}
+.enquiry-top{display:grid;grid-template-columns:1fr auto;gap:1.25rem}
+.show-audience .enquiry-top{grid-template-columns:1fr auto 1fr}
+.enquiry-close{justify-self:end;gap:.75rem;padding:.5rem .75rem}
+.enquiry-close .close-label{font:inherit;line-height:1.2}
+.enquiry-close .close-symbol{font-size:1.75rem;line-height:1}
+.enquiry-close.is-back .close-symbol{order:-1;font-size:1.5rem}
+.view-navigation{display:flex;align-items:center;gap:.25rem;padding:.25rem;border:1px solid var(--line);border-radius:999px}
+.view-navigation button{min-height:2.5rem;border-radius:999px;padding:.5rem 1rem;font-size:.875rem;white-space:nowrap;transition:background-color 160ms,color 160ms}
+.view-navigation button[aria-pressed=true]{background:var(--ink);color:var(--paper)}
+.view-navigation button:not([aria-pressed=true]):hover{background:var(--soft)}
+.show-talent .view-navigation{border-color:#ffffff35}
+.show-talent .view-navigation button[aria-pressed=true]{background:var(--lime);color:var(--ink)}
+.show-talent .view-navigation button:not([aria-pressed=true]):hover{background:#ffffff15}
+.view-navigation button:active{background:var(--soft)}
+.service-arrow:focus-visible,.audience-route:focus-visible{outline-offset:5px}
+.editorial-talent .discipline-tabs button:focus-visible{outline-offset:-3px}
+.service-arrow,.view-navigation button,.enquiry-close{touch-action:manipulation}
+.audience-view .service-row h3{letter-spacing:-.04em}
+.audience-view .editorial-meta{color:var(--muted)}
+.show-talent .editorial-meta{color:#c3c6ba}
+.enquiry-view{scrollbar-gutter:stable;scroll-padding-top:7rem}
+.enquiry-fields .button:disabled{opacity:.65}
+@media(max-width:760px){
+ .show-audience .enquiry-top{grid-template-columns:1fr auto;gap:1rem;padding-block:1rem}
+ .view-navigation{grid-row:2;grid-column:1/-1;justify-self:center;width:100%;border-radius:var(--control-radius)}
+ .view-navigation button{flex:1;border-radius:.5rem;min-height:2.75rem;font-size:.9375rem}
+ .show-audience .enquiry-top .brand{width:7.25rem}
+ .audience-view .editorial-talent{padding-top:.5rem}
+ .audience-view .talent-intro{padding:1.5rem 0 2rem}
+ .audience-view .talent-intro h2{font-size:clamp(2.75rem,11cqi,4.5rem)}
+ .editorial-talent .discipline-tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.5rem;border-bottom:1px solid #ffffff30;padding-bottom:.75rem}
+ .editorial-talent .discipline-tabs button,.editorial-talent .discipline-tabs button:last-child{font-size:clamp(1.5rem,6.7cqi,2.75rem);border:0;padding:.65rem .25rem;justify-content:center;min-height:3rem;border-radius:.5rem}
+ .editorial-talent .discipline-tabs button[aria-selected=true]{background:var(--lime);color:var(--ink);border-radius:.5rem}
+ .editorial-talent .discipline-tabs button[aria-selected=true]:hover{color:var(--ink)}
+ .editorial-talent .discipline-tabs .tab-indicator{display:none}
+ .talent-stage{gap:1rem}.editorial-talent .discipline-panel{border-top:0;padding-top:.5rem}
+ .editorial-talent .discipline-copy{padding-top:1rem}
+ .enquiry-view{scroll-padding-top:11rem}
+}
+@media(prefers-reduced-motion:reduce){.view-navigation button{transition:none}}
+
+.audience-view h2[tabindex="-1"]:focus{outline:none}

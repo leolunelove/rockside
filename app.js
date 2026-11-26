@@ -104,6 +104,8 @@ const form = document.getElementById('enquiry-form');
 const menu = document.querySelector('.menu-toggle');
 const mobileMenu = document.getElementById('mobile-menu');
 const narrowScreen = matchMedia('(max-width: 760px)');
+function syncTabOrientation(){document.querySelector('.discipline-tabs').setAttribute('aria-orientation',narrowScreen.matches?'horizontal':'vertical');}
+syncTabOrientation();narrowScreen.addEventListener('change',syncTabOrientation);
 const background = [...document.body.children].filter(element => element !== enquiry && element.tagName !== 'SCRIPT');
 const originals = new Map(background.map(element => [element, {inert:element.hasAttribute('inert'), aria:element.getAttribute('aria-hidden')}]));
 function lockElements(elements, locked) {
@@ -173,6 +175,8 @@ function configureView(type) {
   document.querySelector('.process').hidden = type !== 'view-brands';
   enquiry.classList.toggle('show-talent',type === 'view-talent');
   enquiry.classList.toggle('show-audience',audience);
+  document.querySelector('.view-navigation').hidden = !audience;
+  document.querySelectorAll('[data-view]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.view===type)));
   const title = document.getElementById(type === 'view-talent' ? 'talent-title' : type === 'view-brands' ? 'brands-title' : 'enquiry-title');
   title.tabIndex = -1; enquiry.setAttribute('aria-labelledby',title.id);
   if (!audience && activeView !== type) configureEnquiry(type);
@@ -220,7 +224,7 @@ async function setEnquiry(open, type = 'project', addHistory = false) {
   if (open) {
     if (menuOpen) await setMenu(false,false,true);
     if (enquiry.hidden) {
-      previousFocus = restoreCandidate; savedScroll = window.scrollY;
+      previousFocus = restoreCandidate === document.body ? document.querySelector(type==='view-brands'?'.route-brands':type==='view-talent'?'.route-talent':'.header-contact') : restoreCandidate; savedScroll = window.scrollY;
       enquiry.hidden = false; travel.position = 100; travel.velocity = 0;
       enquiry.style.transform = 'translate3d(0,100%,0)';
     }
@@ -232,13 +236,17 @@ async function setEnquiry(open, type = 'project', addHistory = false) {
     enquiry.scrollTop = addHistory ? 0 : (viewScroll.get(type)||0);
     lockElements(background,true); document.documentElement.classList.add('enquiry-open');
     if (addHistory) history.pushState({rocksideView:true,type,parent:switching},'',routeFor(type));
-    document.querySelector('.enquiry-close').firstChild.textContent = history.state?.parent ? 'Back ' : 'Close ';
+    const isBack = !!history.state?.parent;
+    document.querySelector('.close-label').textContent = isBack ? 'Back' : 'Close';
+    document.querySelector('.close-symbol').textContent = isBack ? '←' : '×';
+    document.querySelector('.enquiry-close').classList.toggle('is-back',isBack);
     const remembered = !addHistory && viewFocus.get(type);
     (remembered?.isConnected && remembered.getClientRects().length ? remembered : title).focus({preventScroll:true});
     // Changing content keeps its position; the user never waits for a closing animation.
     if (switching) {
       const content = type.startsWith('view-') ? audienceView : contactLayout;
-      content.style.opacity = '.6'; animateTo(content,{opacity:'1'},160);
+      if (!moving.has(content)) content.style.opacity = '.8';
+      animateTo(content,{opacity:'1'},160);
     }
   } else enquiryOpen = false;
   const done = await springTravel(open?0:100);
@@ -260,6 +268,7 @@ function requestEnquiryClose() {
   if (history.state?.rocksideView) history.back();
   else {history.replaceState(null,'',location.pathname+location.search);setEnquiry(false);}
 }
+document.querySelectorAll('[data-view]').forEach(button=>button.addEventListener('click',()=>{if(activeView!==button.dataset.view)setEnquiry(true,button.dataset.view,true);}));
 document.querySelectorAll('[data-enquire]').forEach(button=>button.addEventListener('click',()=>setEnquiry(true,button.dataset.enquire,true)));
 document.querySelectorAll('a[href="#talent"],a[href="#brands"]').forEach(link=>{
   link.setAttribute('aria-haspopup','dialog');
