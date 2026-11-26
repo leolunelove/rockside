@@ -148,69 +148,138 @@ document.addEventListener('keydown', event => {
   }
 });
 
-// Full-screen enquiry: one travel path in both directions, live-value reversal.
-let previousFocus, savedScroll = 0, enquiryOpen = false, enquiryVersion = 0, ownsEnquiryHistory = false;
+// One full-screen surface for audience views and contact. Native history owns the route.
+const audienceView = document.querySelector('.audience-view');
+const contactLayout = document.querySelector('.enquiry-layout');
+const talentView = document.getElementById('talent');
+const brandsView = document.getElementById('brands');
+let previousFocus, savedScroll = 0, enquiryOpen = false, enquiryVersion = 0;
+let activeView = null;
+const viewScroll = new Map();
+const viewFocus = new Map();
+const routeFor = type => type === 'view-talent' ? '#talent' : type === 'view-brands' ? '#brands' : '#enquiry';
 function configureEnquiry(type) {
   const talent = type === 'talent';
   form.elements.interest.value = talent ? 'Representation' : ({casting:'Casting & bookings', creators:'Creator partnerships', campaign:'Campaign coordination'}[type] || 'Casting & bookings');
-  document.getElementById('enquiry-title').textContent = 'LET’S TALK.';
   document.getElementById('enquiry-intro').textContent = talent ? 'Tell us about your work and where you’d like to go.' : 'Tell us what you have in mind. We’ll get back to you by email.';
   form.elements.brief.placeholder = talent ? 'Your discipline, experience and portfolio links.' : 'Your project, timing, location and budget, if known.';
   document.getElementById('form-heading').textContent = talent ? 'Your introduction' : 'Your enquiry';
   resetFormFeedback();
 }
+function configureView(type) {
+  const audience = type.startsWith('view-');
+  audienceView.hidden = !audience; contactLayout.hidden = audience;
+  talentView.hidden = type !== 'view-talent'; brandsView.hidden = type !== 'view-brands';
+  document.querySelector('.process').hidden = type !== 'view-brands';
+  enquiry.classList.toggle('show-talent',type === 'view-talent');
+  enquiry.classList.toggle('show-audience',audience);
+  const title = document.getElementById(type === 'view-talent' ? 'talent-title' : type === 'view-brands' ? 'brands-title' : 'enquiry-title');
+  title.tabIndex = -1; enquiry.setAttribute('aria-labelledby',title.id);
+  if (!audience && activeView !== type) configureEnquiry(type);
+  return title;
+}
+// Critically damped analytic spring: position AND velocity survive every retarget.
+function springStep(position, velocity, target, seconds, omega = 20) {
+  const displacement = position - target;
+  const carry = velocity + omega * displacement;
+  const decay = Math.exp(-omega * seconds);
+  return {position:target + (displacement + carry * seconds) * decay,
+    velocity:(velocity - omega * carry * seconds) * decay};
+}
+let travel = {position:100,velocity:0,target:100,frame:0,last:0,resolve:null};
+function finishTravel() {
+  cancelAnimationFrame(travel.frame); travel.frame = 0;
+  travel.position = travel.target; travel.velocity = 0;
+  enquiry.style.transform = `translate3d(0,${travel.position}%,0)`;
+  travel.resolve?.(true); travel.resolve = null;
+}
+function springTravel(target) {
+  travel.resolve?.(false); travel.target = target;
+  const promise = new Promise(resolve => travel.resolve = resolve);
+  if (motionPreference.matches) {finishTravel(); return promise;}
+  if (!travel.frame) {
+    travel.last = performance.now();
+    const tick = now => {
+      // Analytic integration is stable across refresh rates and dropped frames.
+      const next = springStep(travel.position,travel.velocity,travel.target,(now-travel.last)/1000);
+      travel.position = next.position; travel.velocity = next.velocity; travel.last = now;
+      enquiry.style.transform = `translate3d(0,${travel.position}%,0)`;
+      if (Math.abs(travel.position-travel.target)<.025 && Math.abs(travel.velocity)<.1) finishTravel();
+      else travel.frame = requestAnimationFrame(tick);
+    };
+    travel.frame = requestAnimationFrame(tick);
+  }
+  return promise;
+}
+motionPreference.addEventListener('change',()=>{if(motionPreference.matches)finishTravel();});
 async function setEnquiry(open, type = 'project', addHistory = false) {
-  if (open === enquiryOpen && !enquiry.hidden) return;
   if (!open && enquiry.hidden) return;
   const version = ++enquiryVersion;
   const restoreCandidate = mobileMenu.contains(document.activeElement) ? menu : document.activeElement;
-  enquiryOpen = open;
+  const switching = open && enquiryOpen && activeView !== type;
   if (open) {
-    if (menuOpen) await setMenu(false, false, true);
+    if (menuOpen) await setMenu(false,false,true);
     if (enquiry.hidden) {
       previousFocus = restoreCandidate; savedScroll = window.scrollY;
-      enquiry.hidden = false; enquiry.scrollTop = 0; enquiry.style.transform = 'translateY(100%)';
+      enquiry.hidden = false; travel.position = 100; travel.velocity = 0;
+      enquiry.style.transform = 'translate3d(0,100%,0)';
     }
-    configureEnquiry(type);
-    lockElements(background, true); document.documentElement.classList.add('enquiry-open');
-    if (addHistory) {history.pushState({rocksideEnquiry:true,type}, '', '#enquiry'); ownsEnquiryHistory = true;}
-    document.getElementById('enquiry-title').focus({preventScroll:true});
-  }
-  const height = enquiry.getBoundingClientRect().height;
-  const currentY = enquiry.getBoundingClientRect().top;
-  const distance = Math.abs((open ? 0 : height) - currentY) / Math.max(1,height);
-  const done = await animateTo(enquiry, {transform:open?'translateY(0)':'translateY(100%)'}, Math.max(90, (open?620:420)*distance));
+    if (switching && activeView) {
+      viewScroll.set(activeView,enquiry.scrollTop); viewFocus.set(activeView,restoreCandidate);
+    }
+    enquiryOpen = true;
+    const title = configureView(type); activeView = type;
+    enquiry.scrollTop = addHistory ? 0 : (viewScroll.get(type)||0);
+    lockElements(background,true); document.documentElement.classList.add('enquiry-open');
+    if (addHistory) history.pushState({rocksideView:true,type,parent:switching},'',routeFor(type));
+    document.querySelector('.enquiry-close').firstChild.textContent = history.state?.parent ? 'Back ' : 'Close ';
+    const remembered = !addHistory && viewFocus.get(type);
+    (remembered?.isConnected && remembered.getClientRects().length ? remembered : title).focus({preventScroll:true});
+    // Changing content keeps its position; the user never waits for a closing animation.
+    if (switching) {
+      const content = type.startsWith('view-') ? audienceView : contactLayout;
+      content.style.opacity = '.6'; animateTo(content,{opacity:'1'},160);
+    }
+  } else enquiryOpen = false;
+  const done = await springTravel(open?0:100);
   if (!done || version !== enquiryVersion) return;
+  if (open && !enquiry.contains(document.activeElement)) {
+    const remembered = viewFocus.get(type);
+    const title = document.getElementById(enquiry.getAttribute('aria-labelledby'));
+    (remembered?.isConnected && remembered.getClientRects().length ? remembered : title).focus({preventScroll:true});
+  }
   if (!open) {
-    enquiry.hidden = true; lockElements(background, false);
-    document.documentElement.classList.remove('enquiry-open');
-    window.scrollTo({top:savedScroll,behavior:'instant'});
-    previousFocus?.focus({preventScroll:true});
+    enquiry.hidden = true; activeView = null;
+    lockElements(background,false); document.documentElement.classList.remove('enquiry-open');
+    window.scrollTo({top:savedScroll,behavior:'instant'}); previousFocus?.focus({preventScroll:true});
+    viewScroll.clear(); viewFocus.clear();
   }
 }
 function requestEnquiryClose() {
   if (!enquiryOpen) return;
-  setEnquiry(false);
-  if (ownsEnquiryHistory) {ownsEnquiryHistory = false; history.back();}
-  else history.replaceState(null, '', location.pathname + location.search);
+  if (history.state?.rocksideView) history.back();
+  else {history.replaceState(null,'',location.pathname+location.search);setEnquiry(false);}
 }
-document.querySelectorAll('[data-enquire]').forEach(button => button.addEventListener('click', () => setEnquiry(true, button.dataset.enquire, true)));
-document.querySelectorAll('[data-close-enquiry]').forEach(button => button.addEventListener('click', event => {event.preventDefault(); requestEnquiryClose();}));
-window.addEventListener('popstate', () => {
-  const open = location.hash === '#enquiry';
-  ownsEnquiryHistory = open && !!history.state?.rocksideEnquiry;
-  setEnquiry(open, history.state?.type || 'project');
+document.querySelectorAll('[data-enquire]').forEach(button=>button.addEventListener('click',()=>setEnquiry(true,button.dataset.enquire,true)));
+document.querySelectorAll('a[href="#talent"],a[href="#brands"]').forEach(link=>{
+  link.setAttribute('aria-haspopup','dialog');
+  link.addEventListener('click',event=>{event.preventDefault();setEnquiry(true,link.hash==='#talent'?'view-talent':'view-brands',true);});
 });
-enquiry.addEventListener('keydown', event => {
-  if (event.key === 'Escape') {event.preventDefault(); requestEnquiryClose();}
-  if (event.key === 'Tab') {
-    const focusable = [...enquiry.querySelectorAll('a,button,input,select,textarea')].filter(element => !element.disabled && element.tabIndex >= 0 && element.getClientRects().length);
-    const first = focusable[0], last = focusable.at(-1);
-    if (event.shiftKey && (document.activeElement === first || document.activeElement.id === 'enquiry-title')) {event.preventDefault(); last.focus();}
-    else if (!event.shiftKey && document.activeElement === last) {event.preventDefault(); first.focus();}
+document.querySelectorAll('[data-close-enquiry]').forEach(button=>button.addEventListener('click',event=>{event.preventDefault();requestEnquiryClose();}));
+window.addEventListener('popstate',()=>{
+  const hash=location.hash;
+  if(hash==='#talent'||hash==='#brands'||hash==='#enquiry')setEnquiry(true,history.state?.type||(hash==='#talent'?'view-talent':hash==='#brands'?'view-brands':'project'));
+  else setEnquiry(false);
+});
+enquiry.addEventListener('keydown',event=>{
+  if(event.key==='Escape'){event.preventDefault();requestEnquiryClose();}
+  if(event.key==='Tab'){
+    const focusable=[...enquiry.querySelectorAll('a,button,input,select,textarea')].filter(element=>!element.disabled&&element.tabIndex>=0&&element.getClientRects().length);
+    const first=focusable[0],last=focusable.at(-1);
+    if(event.shiftKey&&(document.activeElement===first||document.activeElement.id===enquiry.getAttribute('aria-labelledby'))){event.preventDefault();last.focus();}
+    else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus();}
   }
 });
-
 
 // Native details semantics; height is the sole intentional layout animation.
 const accordionItems = [...document.querySelectorAll('.accordion details')];
@@ -337,14 +406,5 @@ document.getElementById('new-enquiry').addEventListener('click',()=>{
 });
 document.getElementById('year').textContent=new Date().getFullYear();
 
-// Navigation location cues don't change the link geometry or hijack scrolling.
-const locationLinks=[...document.querySelectorAll('.header nav a,#mobile-menu a,.footer-top nav a')];
-const sections=['talent','about','brands'].map(id=>document.getElementById(id));
-const sectionObserver=new IntersectionObserver(()=>{
-  const threshold=innerHeight*.36;
-  const active=sections.filter(section=>section.getBoundingClientRect().top<=threshold).at(-1);
-  const id=active && active.getBoundingClientRect().bottom>0 ? active.id : null;
-  locationLinks.forEach(link=>{if(link.hash==='#'+id)link.setAttribute('aria-current','location');else link.removeAttribute('aria-current');});
-},{rootMargin:'-20% 0px -45% 0px',threshold:0});
-sections.forEach(section=>sectionObserver.observe(section));
-if (location.hash === '#enquiry') setEnquiry(true);
+// About remains an ordinary page anchor; audience routes open focused views.
+if (['#talent','#brands','#enquiry'].includes(location.hash)) setEnquiry(true,location.hash==='#talent'?'view-talent':location.hash==='#brands'?'view-brands':'project');
