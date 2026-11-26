@@ -1,0 +1,66 @@
+/* Fluid geometry, readable limits, native scrolling. */
+:root{--gutter:clamp(1rem,3.1vw,5rem);--space:clamp(5.5rem,10vw,12rem);--radius:clamp(1.4rem,2vw,2.4rem)}
+html{scrollbar-gutter:stable;scroll-padding-top:2rem}
+body{font-size:clamp(1rem,.83rem + .25vw,1.25rem)}
+.shell{width:calc(100% - var(--gutter)*2);max-width:112rem;container-type:inline-size}
+.header{height:clamp(6rem,9.2vw,10rem);gap:clamp(1rem,2vw,3rem)}
+.brand{width:clamp(8.25rem,12.5vw,15rem)}
+.header nav{gap:clamp(1.5rem,3.2vw,4rem);font-size:clamp(1rem,1.2vw,1.375rem)}
+.button{font-size:clamp(1rem,1.2vw,1.375rem);min-height:3.375rem;padding:1em 1.65em}
+.header-contact{font-size:clamp(1rem,1.2vw,1.375rem);padding:.85em 1.6em}
+.intro{padding-top:clamp(3.25rem,4.45vw,6rem)}
+.intro h1{font-size:clamp(2.25rem,10.2cqi,12.75rem);line-height:1.08}
+.hero-description{font-size:clamp(1.0625rem,2.05cqi,2.35rem);max-width:80%;margin-top:clamp(1.6rem,2vw,3rem)}
+.hero-actions{gap:clamp(.75rem,2vw,2.5rem);margin-top:clamp(2rem,3.35vw,4rem)}
+.hero-actions .button{font-size:clamp(1rem,1.4vw,1.65rem);min-height:3.4rem;padding:.95em 2em}
+.audience-routes{margin-top:clamp(4rem,7vw,8rem);gap:clamp(1rem,1.55vw,2rem)}
+.audience-route{padding:clamp(1.6rem,2vw,2.8rem) clamp(1.6rem,2.9vw,3.8rem);min-height:clamp(8rem,10vw,12rem);border-radius:var(--radius)}
+.audience-route h2{font-size:clamp(1.75rem,2.45cqi,3rem)}
+.audience-route p{font-size:clamp(1rem,1.2cqi,1.4rem)}
+.section-space{margin-top:var(--space)}
+.section-heading{gap:clamp(2rem,4vw,5rem);margin-bottom:clamp(2rem,3.3vw,4rem)}
+.section-heading h2{font-size:clamp(2.625rem,4.9cqi,6rem)}
+.section-heading>p{font-size:inherit;max-width:26em}
+.eyebrow,.tags span,.discipline-note,.roster-note,.about-values,.detail-label,.footer-top>span{font-size:max(.875rem,.85em)}
+.discipline-panel{gap:clamp(1.25rem,2vw,2.5rem)}
+.discipline-art{min-height:clamp(18rem,28vw,34rem)}
+.discipline-art>span:first-child{font-size:clamp(4.5rem,10cqi,12rem)}
+.discipline-copy{padding:clamp(1.5rem,2.5vw,3rem)}
+.discipline-copy h3{font-size:clamp(2.5rem,4.2cqi,5rem)}
+.discipline-copy p,.service p{font-size:inherit;max-width:30em}
+.about{padding:clamp(1.5rem,3vw,4rem)}
+.about-main{gap:clamp(2rem,5vw,6rem)}
+.about h2{font-size:clamp(3rem,6cqi,7rem)}
+.about-main p{max-width:30em}
+.about-main p.large-copy{font-size:clamp(1.4rem,1.85cqi,2.25rem)}
+.service-grid{gap:clamp(1rem,1.5vw,2rem)}
+.service{padding:clamp(1.75rem,2.4vw,3rem);min-height:clamp(23rem,30vw,36rem)}
+.service h3{font-size:clamp(2.25rem,3.3cqi,4rem)}
+.contact{padding:clamp(1.5rem,3vw,4rem)}
+.contact h2{font-size:clamp(3.5rem,9cqi,11rem)}
+.contact p{font-size:inherit}.footer{padding-top:clamp(3rem,5vw,7rem)}
+/* Full-screen opening view. Animate only transform and opacity. */
+.enquiry-open{overflow:hidden;scroll-behavior:auto}
+.enquiry-view{position:fixed;inset:0;z-index:100;background:var(--paper);height:100vh;height:100dvh;overflow:auto;overscroll-behavior:contain;isolation:isolate}
+.enquiry-top{display:flex;justify-content:space-between;align-items:center;padding:clamp(1.25rem,2.5vw,3rem) var(--gutter);gap:2rem}
+.enquiry-close{display:flex;align-items:center;gap:1rem;font-size:clamp(1rem,1.25vw,1.5rem);min-height:3rem;padding:.5em 0 .5em 1em}
+.enquiry-close span{font-size:2em;line-height:1}
+.enquiry-layout{display:grid;grid-template-columns:1fr 1fr;gap:clamp(3rem,8vw,10rem);padding:clamp(2rem,4vw,6rem) var(--gutter) max(3rem,env(safe-area-inset-bottom));max-width:120rem;margin:auto}
+.enquiry-heading h2{font-size:clamp(4rem,9vw,12rem);line-height:1.02;outline:none;margin:clamp(1.5rem,3vw,4rem) 0 2rem}
+.enquiry-heading p{font-size:clamp(1.125rem,1.6vw,1.875rem);max-width:24em;line-height:1.6}
+.enquiry-heading .small-mark{width:clamp(2.5rem,4vw,5rem);margin-top:3rem}
+.enquiry-fields{align-self:center;min-width:0;padding:clamp(1.5rem,3vw,4rem);background:#eaf6c0;border-radius:var(--radius)}
+.enquiry-fields label{font-size:clamp(.9375rem,1.05vw,1.25rem);margin-bottom:1.5em}
+.enquiry-fields input,.enquiry-fields select,.enquiry-fields textarea{font-size:clamp(1rem,1.15vw,1.375rem);padding:.85em 1em;border:1px solid #20211f38;border-radius:.6rem;background-color:var(--paper)}
+.enquiry-fields textarea{min-height:9em}.enquiry-fields .form-note{font-size:.875rem;max-width:34em}.enquiry-fields .button{gap:2rem}
+@media(max-width:760px){
+ .header{height:6rem}.intro{padding-top:3rem}.intro h1{font-size:10.1cqi}.hero-description{max-width:29em;font-size:1.0625rem}
+ .hero-actions{flex-wrap:wrap}.hero-actions .button{font-size:1rem;padding:1em 1.4em}.audience-routes{grid-template-columns:1fr}
+ .audience-route h2{font-size:1.75rem}.audience-route p{max-width:24em}.audience-route{min-height:8rem}
+ .discipline-panel,.about-main,.service-grid{grid-template-columns:1fr}.discipline-art>span:first-child{font-size:23cqi}.discipline-copy{padding:2rem .25rem}
+ .section-heading h2{font-size:clamp(2.25rem,11cqi,4rem)}.service h3{font-size:clamp(2.25rem,10cqi,4rem)}.service{min-height:22rem}
+ .contact h2{font-size:13cqi}.contact .button,.contact p,.section-heading>p{font-size:1rem}
+ .enquiry-layout{grid-template-columns:1fr;gap:2.5rem;padding-top:1rem}.enquiry-heading h2{font-size:clamp(3.75rem,17vw,7rem);margin:1.5rem 0}.enquiry-heading .small-mark{display:none}.enquiry-heading p{font-size:1.125rem}.enquiry-top .brand{width:8rem}.enquiry-fields{padding:1.5rem}.enquiry-fields .form-row{grid-template-columns:1fr}
+}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.audience-route:hover,.button:hover,.service:hover{transform:none}}
+.enquiry-top{position:sticky;top:0;z-index:2;background:var(--paper)}
