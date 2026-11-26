@@ -64,3 +64,51 @@ body{font-size:clamp(1rem,.83rem + .25vw,1.25rem)}
 }
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.audience-route:hover,.button:hover,.service:hover{transform:none}}
 .enquiry-top{position:sticky;top:0;z-index:2;background:var(--paper)}
+/* Detail pass: preserve the approved geometry, refine meaning and states. */
+:root{--field-line:#85887f;--error:#973a2c}
+p{text-wrap:pretty}.hero-description{text-wrap:balance}
+.header nav a[aria-current=location]:after{transform:scaleX(1)}
+.footer-top nav a[aria-current=location]{text-decoration:underline;text-underline-offset:.3em}
+.button{font-weight:600}.button.outline,.button.clear{border-color:var(--ink)}
+.button:disabled{opacity:.5;cursor:not-allowed;transform:none;box-shadow:none}
+.roster-note{display:flex;align-items:center;justify-content:space-between;gap:1.5rem;margin:0 0 1.75rem;padding:0;color:var(--muted);font-size:1rem}
+.roster-note p{margin:0;max-width:38em}.roster-note .text-link{flex-shrink:0;min-height:2.75rem}
+.discipline-tabs button .tab-indicator{display:block;width:.5rem;height:.5rem;border:1px solid currentColor;border-radius:50%;background:transparent;transition:background-color var(--motion-state),border-color var(--motion-state)}
+.discipline-tabs button[aria-selected=true] .tab-indicator{background:var(--lime);border-color:var(--lime);transform:none}
+.discipline-art:before,.discipline-art:after{display:none}
+.service-action{left:clamp(1.75rem,2.4vw,3rem);right:auto;bottom:clamp(1.75rem,2.4vw,3rem);width:auto;height:auto;min-height:2.75rem;min-width:0;display:inline-flex;align-items:center;gap:1.4rem;border:0;border-bottom:1px solid currentColor;border-radius:0;font-size:1rem;padding:.5rem 0;line-height:1.35}
+.service-action span{font-size:1.35rem;line-height:1}.service:hover .service-action{background:none}
+.service p{margin-bottom:5.5rem}.service h3{line-height:1.04}
+.form-heading{margin-bottom:2rem}.form-heading h3{font:600 clamp(1.25rem,1.6vw,1.75rem)/1.25 Arial,Helvetica,sans-serif;letter-spacing:-.035em;margin-bottom:.75rem}
+.form-heading p{font-size:1rem;line-height:1.6;max-width:34em;color:#49503c}
+.enquiry-fields input,.enquiry-fields select,.enquiry-fields textarea{border-color:var(--field-line)}
+.enquiry-fields input:focus-visible,.enquiry-fields select:focus-visible,.enquiry-fields textarea:focus-visible{outline:2px solid var(--ink);outline-offset:3px;border-color:var(--ink)}
+.enquiry-fields [aria-invalid=true]{border-color:var(--error)}
+.field-error{display:block;color:var(--error);font-size:.875rem;line-height:1.5;margin-top:.5rem}
+.field-meta{display:flex;justify-content:space-between;align-items:flex-start;gap:1rem;margin-top:.5rem;font-size:.8125rem;color:#49503c}
+.field-meta .field-error{margin:0}.field-meta>span:last-child{margin-left:auto;white-space:nowrap}
+.error-summary{border-left:3px solid var(--error);padding:1rem 1.25rem;background:var(--paper);border-radius:.5rem;margin-bottom:1.75rem;color:var(--error);font-size:.9375rem;scroll-margin-top:9rem}
+.error-summary strong{display:block;font-weight:600}.error-summary ul{padding-left:1.2rem;margin:.6rem 0 0}.error-summary li+li{margin-top:.4rem}.error-summary a{text-decoration:underline;text-underline-offset:.2em}
+.form-success{background:var(--paper)!important;color:var(--ink)!important;border-radius:.75rem;padding:1.25rem!important;margin-top:1.5rem!important;font-size:1rem}
+.form-success strong{display:block;margin-bottom:.4rem}.form-success p{font-size:.9375rem;line-height:1.6;max-width:32em;color:#49503c}
+.enquiry-fields label{scroll-margin-top:9rem}.enquiry-fields textarea{line-height:1.6;resize:vertical;max-height:60dvh}
+.footer-top nav a,.footer-top nav button,.footer-bottom a{display:inline-flex;align-items:center;min-height:2.75rem}
+#main:focus{outline:none}
+@media(max-width:760px){
+ .roster-note{align-items:flex-start;flex-direction:column;gap:.5rem;margin-bottom:1.5rem}
+ .service-action{left:1.75rem;bottom:1.75rem}
+ .form-heading h3{font-size:1.375rem}.form-heading{margin-bottom:1.75rem}
+ .footer-top nav{column-gap:1.5rem;row-gap:.25rem}
+}
+.enquiry-fields .field{min-width:0;margin-bottom:1.5rem}
+.enquiry-fields .field label{margin:0;font-weight:500}
+.enquiry-fields .form-row .field{margin-bottom:1.5rem}
+@media(min-width:761px) and (max-width:1024px){
+ .service-grid{grid-template-columns:1fr}.service{min-height:22rem}.service h3{font-size:clamp(2.5rem,5cqi,3.75rem)}
+ .service-action{white-space:nowrap}
+ .enquiry-layout{grid-template-columns:1fr;gap:2.5rem;max-width:54rem}
+ .enquiry-heading h2{font-size:clamp(4rem,10vw,6.5rem);margin:1.75rem 0}
+ .enquiry-heading .small-mark{display:none}.enquiry-heading p{max-width:32em}
+}
+.footer a:hover{color:var(--ink);text-decoration:underline;text-underline-offset:.3em}
+.footer-top nav button:hover{text-decoration:underline;text-underline-offset:.3em}

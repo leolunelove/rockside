@@ -41,3 +41,11 @@ Applied to the existing approved interface, not a request to redesign it:
 - https://aiuxplayground.com/prompts/design-apple-style-ui
 - https://aiuxplayground.com/prompts/responsive-design-strategy
 - https://aiuxplayground.com/prompts/create-design-md
+
+## Detail and completeness pass
+
+Keep the roster-in-development note before the discipline controls, with a direct introduction action. Tab indicators are selection dots, not expand/collapse crosses. Service actions use visible descriptive labels. Tablet service cards and enquiry fields stack through 1024px so controls remain spacious. Keep the hero geometry, colour system and section rhythm intact.
+
+Form labels remain stable: error messages and counts sit outside their label elements and are referenced with aria-describedby. On submit, focus a linked error summary; let the user jump to each invalid field. Clear individual errors when corrected, and avoid rebuilding identical alerts on each keystroke. Limit names to 120, email to 254, and briefs to 4,000 characters. Preserve drafts on close. Editing clears stale success feedback. Local downloads use real line breaks and preserve Unicode. A download-ready message must never imply email delivery.
+
+Do not put a private recipient address or delivery credentials in browser assets. Live email delivery requires a separately configured server endpoint. Until one exists, explain the local-download behaviour before the fields. No fake sending, loading or delivered states.

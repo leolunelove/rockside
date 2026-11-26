@@ -156,7 +156,8 @@ function configureEnquiry(type) {
   document.getElementById('enquiry-title').innerHTML = talent ? 'YOUR WIDER<br>STAGE.' : 'LET’S<br>TALK.';
   document.getElementById('enquiry-intro').textContent = talent ? 'Introduce yourself and tell us about your discipline, experience and work.' : 'Tell us about the idea, the people you need and where you want to take it.';
   form.elements.brief.placeholder = talent ? 'Your discipline, experience and portfolio links.' : 'Your project, timing, location and budget, if known.';
-  document.getElementById('form-status').hidden = true;
+  document.getElementById('form-heading').textContent = talent ? 'Prepare your introduction' : 'Prepare your project brief';
+  resetFormFeedback();
 }
 async function setEnquiry(open, type = 'project', addHistory = false) {
   if (open === enquiryOpen && !enquiry.hidden) return;
@@ -209,7 +210,7 @@ enquiry.addEventListener('keydown', event => {
     else if (!event.shiftKey && document.activeElement === last) {event.preventDefault(); first.focus();}
   }
 });
-if (location.hash === '#enquiry') setEnquiry(true);
+
 
 // Native details semantics; height is the sole intentional layout animation.
 const accordionItems = [...document.querySelectorAll('.accordion details')];
@@ -236,4 +237,88 @@ accordionItems.forEach(details => {
     setAccordion(details,open);
   });
 });
-form.addEventListener('submit',e=>{e.preventDefault();if(!form.reportValidity())return;const d=new FormData(form);const text=['ROCKSIDE TALENT / ENQUIRY','',`Name: ${d.get('name')}`,`Email: ${d.get('email')}`,`Interest: ${d.get('interest')}`,`Discipline viewed: ${disciplines[renderedDiscipline].word}`,'',String(d.get('brief')),'','Prepared locally. This enquiry has not been sent.'].join('\n');const u=URL.createObjectURL(new Blob([text],{type:'text/plain;charset=utf-8'}));const a=document.createElement('a');a.href=u;a.download='Rockside-Enquiry.txt';a.click();setTimeout(()=>URL.revokeObjectURL(u),1000);document.getElementById('form-status').hidden=false});document.getElementById('year').textContent=new Date().getFullYear();
+// Clear validation, recoverable errors and an honest local-download success state.
+form.noValidate = true;
+let validationShown = false;
+const fieldNames = ['name','email','brief'];
+const formErrors = document.getElementById('form-errors');
+let lastErrorSignature = '';
+function getBriefErrors() {
+  const errors = {};
+  if (!form.elements.name.value.trim()) errors.name = 'Enter your name.';
+  if (!form.elements.email.value.trim()) errors.email = 'Enter your email address.';
+  else if (!form.elements.email.validity.valid) errors.email = 'Enter a valid email address, such as name@example.com.';
+  if (!form.elements.brief.value.trim()) errors.brief = 'Tell us a little about your project or experience.';
+  return errors;
+}
+function showBriefErrors(errors) {
+  fieldNames.forEach(name => {
+    const field = form.elements[name], message = document.getElementById('error-' + name);
+    message.textContent = errors[name] || ''; message.hidden = !errors[name];
+    if (errors[name]) field.setAttribute('aria-invalid','true'); else field.removeAttribute('aria-invalid');
+  });
+  const signature = JSON.stringify(errors);
+  if (signature === lastErrorSignature) return;
+  lastErrorSignature = signature;
+  formErrors.replaceChildren();
+  const entries = Object.entries(errors);
+  formErrors.hidden = !entries.length;
+  if (!entries.length) return;
+  const heading = document.createElement('strong'); heading.textContent = 'A few details need your attention.';
+  const list = document.createElement('ul');
+  entries.forEach(([name,message]) => {
+    const item=document.createElement('li'),link=document.createElement('a');
+    link.href='#enquiry-'+name;link.textContent=message;
+    link.addEventListener('click',event=>{event.preventDefault();form.elements[name].focus();});
+    item.append(link);list.append(item);
+  });
+  formErrors.append(heading,list);
+}
+function resetFormFeedback() {
+  validationShown = false; showBriefErrors({});
+  document.getElementById('form-status').hidden = true;
+  document.getElementById('save-error').hidden = true;
+  document.getElementById('save-label').textContent = 'Download brief';
+}
+form.addEventListener('input', () => {
+  document.getElementById('brief-count').textContent = form.elements.brief.value.length.toLocaleString('en-GB') + ' / 4,000';
+  document.getElementById('form-status').hidden = true;
+  document.getElementById('save-error').hidden = true;
+  document.getElementById('save-label').textContent = 'Download brief';
+  if (validationShown) showBriefErrors(getBriefErrors());
+});
+// Pure formatter kept separate so line breaks and international names are tested.
+function formatBrief(values, discipline) {
+  return ['ROCKSIDE TALENT / ENQUIRY','',`Name: ${values.name.trim()}`,`Email: ${values.email.trim()}`,`Interest: ${values.interest}`,`Discipline viewed: ${discipline}`,'',values.brief.trim(),'','Prepared locally. This enquiry has not been sent.'].join('\n');
+}
+form.addEventListener('submit', event => {
+  event.preventDefault();validationShown = true;
+  const errors = getBriefErrors();showBriefErrors(errors);
+  if (Object.keys(errors).length) {formErrors.focus();return;}
+  let url,link;
+  try {
+    const values = Object.fromEntries(new FormData(form));
+    url = URL.createObjectURL(new Blob([formatBrief(values,disciplines[renderedDiscipline].word)],{type:'text/plain;charset=utf-8'}));
+    link = document.createElement('a');link.href=url;link.download='Rockside-Brief.txt';
+    document.body.append(link);link.click();link.remove();
+    setTimeout(()=>URL.revokeObjectURL(url),1000);
+    document.getElementById('form-status').hidden = false;
+    document.getElementById('save-label').textContent = 'Download again';
+  } catch {
+    link?.remove();if(url)URL.revokeObjectURL(url);
+    document.getElementById('save-error').hidden = false;
+  }
+});
+document.getElementById('year').textContent = new Date().getFullYear();
+
+// Navigation location cues don't change the link geometry or hijack scrolling.
+const locationLinks=[...document.querySelectorAll('.header nav a,#mobile-menu a,.footer-top nav a')];
+const sections=['talent','about','brands'].map(id=>document.getElementById(id));
+const sectionObserver=new IntersectionObserver(()=>{
+  const threshold=innerHeight*.36;
+  const active=sections.filter(section=>section.getBoundingClientRect().top<=threshold).at(-1);
+  const id=active && active.getBoundingClientRect().bottom>0 ? active.id : null;
+  locationLinks.forEach(link=>{if(link.hash==='#'+id)link.setAttribute('aria-current','location');else link.removeAttribute('aria-current');});
+},{rootMargin:'-20% 0px -45% 0px',threshold:0});
+sections.forEach(section=>sectionObserver.observe(section));
+if (location.hash === '#enquiry') setEnquiry(true);
