@@ -153,10 +153,10 @@ let previousFocus, savedScroll = 0, enquiryOpen = false, enquiryVersion = 0, own
 function configureEnquiry(type) {
   const talent = type === 'talent';
   form.elements.interest.value = talent ? 'Representation' : ({casting:'Casting & bookings', creators:'Creator partnerships', campaign:'Campaign coordination'}[type] || 'Casting & bookings');
-  document.getElementById('enquiry-title').innerHTML = talent ? 'YOUR WIDER<br>STAGE.' : 'LET’S<br>TALK.';
-  document.getElementById('enquiry-intro').textContent = talent ? 'Introduce yourself and tell us about your discipline, experience and work.' : 'Tell us about the idea, the people you need and where you want to take it.';
+  document.getElementById('enquiry-title').textContent = 'LET’S TALK.';
+  document.getElementById('enquiry-intro').textContent = talent ? 'Tell us about your work and where you’d like to go.' : 'Tell us what you have in mind. We’ll get back to you by email.';
   form.elements.brief.placeholder = talent ? 'Your discipline, experience and portfolio links.' : 'Your project, timing, location and budget, if known.';
-  document.getElementById('form-heading').textContent = talent ? 'Prepare your introduction' : 'Prepare your project brief';
+  document.getElementById('form-heading').textContent = talent ? 'Your introduction' : 'Your enquiry';
   resetFormFeedback();
 }
 async function setEnquiry(open, type = 'project', addHistory = false) {
@@ -204,7 +204,7 @@ window.addEventListener('popstate', () => {
 enquiry.addEventListener('keydown', event => {
   if (event.key === 'Escape') {event.preventDefault(); requestEnquiryClose();}
   if (event.key === 'Tab') {
-    const focusable = [...enquiry.querySelectorAll('a,button,input,select,textarea')].filter(element => !element.disabled);
+    const focusable = [...enquiry.querySelectorAll('a,button,input,select,textarea')].filter(element => !element.disabled && element.tabIndex >= 0 && element.getClientRects().length);
     const first = focusable[0], last = focusable.at(-1);
     if (event.shiftKey && (document.activeElement === first || document.activeElement.id === 'enquiry-title')) {event.preventDefault(); last.focus();}
     else if (!event.shiftKey && document.activeElement === last) {event.preventDefault(); first.focus();}
@@ -239,7 +239,7 @@ accordionItems.forEach(details => {
 });
 // Clear validation, recoverable errors and an honest local-download success state.
 form.noValidate = true;
-let validationShown = false;
+let validationShown = false, isSending = false, lastSubmission = null;
 const fieldNames = ['name','email','brief'];
 const formErrors = document.getElementById('form-errors');
 let lastErrorSignature = '';
@@ -247,7 +247,7 @@ function getBriefErrors() {
   const errors = {};
   if (!form.elements.name.value.trim()) errors.name = 'Enter your name.';
   if (!form.elements.email.value.trim()) errors.email = 'Enter your email address.';
-  else if (!form.elements.email.validity.valid) errors.email = 'Enter a valid email address, such as name@example.com.';
+  else if (!form.elements.email.validity.valid || !/^\S+@[^\s@]+\.[^\s@]+$/.test(form.elements.email.value.trim())) errors.email = 'Enter a valid email address, such as name@example.com.';
   if (!form.elements.brief.value.trim()) errors.brief = 'Tell us a little about your project or experience.';
   return errors;
 }
@@ -278,38 +278,64 @@ function resetFormFeedback() {
   validationShown = false; showBriefErrors({});
   document.getElementById('form-status').hidden = true;
   document.getElementById('save-error').hidden = true;
-  document.getElementById('save-label').textContent = 'Download brief';
+  document.getElementById('save-label').textContent = isSending ? 'Sending…' : 'Send enquiry';
+  document.getElementById('send-progress').hidden = !isSending;
+  form.querySelector('[type=submit]').disabled = isSending;
 }
 form.addEventListener('input', () => {
   document.getElementById('brief-count').textContent = form.elements.brief.value.length.toLocaleString('en-GB') + ' / 4,000';
   document.getElementById('form-status').hidden = true;
   document.getElementById('save-error').hidden = true;
-  document.getElementById('save-label').textContent = 'Download brief';
+  document.getElementById('save-label').textContent = isSending ? 'Sending…' : 'Send enquiry';
+  document.getElementById('send-progress').hidden = !isSending;
+  form.querySelector('[type=submit]').disabled = isSending;
   if (validationShown) showBriefErrors(getBriefErrors());
 });
-// Pure formatter kept separate so line breaks and international names are tested.
-function formatBrief(values, discipline) {
-  return ['ROCKSIDE TALENT / ENQUIRY','',`Name: ${values.name.trim()}`,`Email: ${values.email.trim()}`,`Interest: ${values.interest}`,`Discipline viewed: ${discipline}`,'',values.brief.trim(),'','Prepared locally. This enquiry has not been sent.'].join('\n');
+// The public client contains no destination address or delivery credential.
+const contactEndpoint = 'https://qbkrqibmolaetilruxki.supabase.co/functions/v1/rockside-contact';
+const contactPublishableKey = 'sb_publishable_X4CdUNDE6Ve42fWDdGMBdA_Ev-2F_v2';
+function contactValues(values) {
+ return {name:String(values.name||'').trim(),email:String(values.email||'').trim().toLowerCase(),interest:String(values.interest||''),brief:String(values.brief||'').trim(),website:String(values.website||'')};
 }
-form.addEventListener('submit', event => {
-  event.preventDefault();validationShown = true;
-  const errors = getBriefErrors();showBriefErrors(errors);
-  if (Object.keys(errors).length) {formErrors.focus();return;}
-  let url,link;
-  try {
-    const values = Object.fromEntries(new FormData(form));
-    url = URL.createObjectURL(new Blob([formatBrief(values,disciplines[renderedDiscipline].word)],{type:'text/plain;charset=utf-8'}));
-    link = document.createElement('a');link.href=url;link.download='Rockside-Brief.txt';
-    document.body.append(link);link.click();link.remove();
-    setTimeout(()=>URL.revokeObjectURL(url),1000);
-    document.getElementById('form-status').hidden = false;
-    document.getElementById('save-label').textContent = 'Download again';
-  } catch {
-    link?.remove();if(url)URL.revokeObjectURL(url);
-    document.getElementById('save-error').hidden = false;
-  }
+function enquiryId() {
+ if (crypto.randomUUID) return crypto.randomUUID();
+ return '10000000-1000-4000-8000-100000000000'.replace(/[018]/g,c=>(Number(c)^crypto.getRandomValues(new Uint8Array(1))[0]&15>>Number(c)/4).toString(16));
+}
+function setSending(value) {
+ isSending=value;form.setAttribute('aria-busy',String(value));
+ [...form.querySelectorAll('input,select,textarea')].forEach(field=>field.disabled=value);
+ form.querySelector('[type=submit]').disabled=value;
+ document.getElementById('save-label').textContent=value?'Sending…':'Send enquiry';
+ document.getElementById('send-progress').hidden=!value;
+}
+form.addEventListener('submit', async event => {
+ event.preventDefault();if(isSending)return;validationShown=true;
+ const errors=getBriefErrors();showBriefErrors(errors);
+ if(Object.keys(errors).length){formErrors.focus();return;}
+ const values=contactValues(Object.fromEntries(new FormData(form)));
+ const signature=JSON.stringify(values);
+ if(!lastSubmission || lastSubmission.signature!==signature)lastSubmission={signature,id:enquiryId()};
+ document.getElementById('save-error').hidden=true;document.getElementById('form-status').hidden=true;
+ setSending(true);
+ const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),25000);
+ try {
+  const response=await fetch(contactEndpoint,{method:'POST',headers:{'Content-Type':'application/json',apikey:contactPublishableKey},body:JSON.stringify({...values,id:lastSubmission.id}),signal:controller.signal});
+  const result=await response.json().catch(()=>({}));
+  if(!response.ok || result.ok!==true)throw Error(result.error||'We couldn’t send your enquiry. Your details are still here—please try again.');
+  document.getElementById('form-status').hidden=false;
+  document.getElementById('save-label').textContent='Sent';
+ }catch(error){
+  const message=error.name==='AbortError'?'Sending took too long. Your message is still here—please try again.':error.message==='Failed to fetch'?'We couldn’t connect. Your message is still here—please check your connection and try again.':error.message;
+  const notice=document.getElementById('save-error');notice.textContent=message;notice.hidden=false;
+ }finally{
+  clearTimeout(timeout);setSending(false);
+  if(!document.getElementById('form-status').hidden){document.getElementById('save-label').textContent='Sent';form.querySelector('[type=submit]').disabled=true;}
+ }
 });
-document.getElementById('year').textContent = new Date().getFullYear();
+document.getElementById('new-enquiry').addEventListener('click',()=>{
+ form.elements.brief.value='';lastSubmission=null;document.getElementById('brief-count').textContent='0 / 4,000';resetFormFeedback();form.elements.brief.focus();
+});
+document.getElementById('year').textContent=new Date().getFullYear();
 
 // Navigation location cues don't change the link geometry or hijack scrolling.
 const locationLinks=[...document.querySelectorAll('.header nav a,#mobile-menu a,.footer-top nav a')];

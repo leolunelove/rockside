@@ -1,5 +1,7 @@
 # Rockside interaction refinement — 26 November 2026
 
+Historical review: local-download notes below are superseded by the connected contact form documented in ../backend/CONTACT-DELIVERY.md.
+
 All four shortlisted prompts were applied to the approved interface. No new visual direction was introduced.
 
 ## Motion polish

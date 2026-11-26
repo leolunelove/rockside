@@ -1,5 +1,7 @@
 # Rockside full-site polish — 26 November 2026
 
+Historical review: local-download notes below are superseded by the connected contact form documented in ../backend/CONTACT-DELIVERY.md.
+
 Applied the four requested prompts to the existing approved branding and spacing. This was a refinement, not a new aesthetic direction.
 
 ## 1. Polish frontend UI
