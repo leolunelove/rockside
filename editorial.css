@@ -9,18 +9,99 @@ h2,h3{overflow-wrap:anywhere}.button>span{min-width:0}
 .header{height:var(--header-height);grid-template-columns:minmax(0,1fr) auto minmax(0,1fr)}
 .header .brand,.enquiry-top .brand{width:var(--brand-size);max-width:100%;min-height:2.75rem;display:grid;align-content:center}
 .header nav a{display:flex;align-items:center;min-height:2.75rem}.header nav a:after{transition:transform 180ms var(--motion-ease)}
-.intro{padding-top:clamp(2.25rem,3.5vw,4rem)}.intro h1{font-size:9.1cqi}.hero-description{font-size:clamp(1.0625rem,1.65cqi,1.875rem)}
-.audience-routes{gap:var(--column-gap);margin-top:clamp(2.5rem,4.5vw,5rem)}
-.audience-route{border:0;border-top:1px solid var(--line);border-radius:0;background:transparent;color:var(--ink);padding:1.5rem 0;min-height:0;gap:1.5rem;transition:background-color 160ms var(--motion-ease)}
-.audience-route>div{align-self:flex-start}.audience-route h2{font-size:clamp(1.375rem,1.75cqi,1.875rem)}
+/* A two-part masthead above a single photographic plate. */
+.intro { padding-top:clamp(1.5rem,2.9vw,3.5rem); }
+.intro h1 {
+  display:flex;
+  flex-wrap:wrap;
+  justify-content:space-between;
+  align-items:baseline;
+  margin:0;
+  text-align:left;
+  font-size:7.46cqi;
+  letter-spacing:-.018em;
+  line-height:1.07;
+}
+.intro h1 span { max-width:100%; white-space:normal; }
+.ridge-plate {
+  position:relative;
+  isolation:isolate;
+  aspect-ratio:3.22;
+  margin:clamp(.9rem,1.65vw,2rem) 0 0;
+  overflow:hidden;
+  border-radius:clamp(.9rem,1.65vw,1.75rem);
+  background:#373a36;
+  color:var(--paper);
+}
+.ridge-plate > img {
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  object-position:50% 24%;
+}
+.ridge-plate::after {
+  content:"";
+  position:absolute;
+  inset:0;
+  background:linear-gradient(0deg,rgba(16,19,16,.5),transparent 57%),linear-gradient(95deg,transparent 41%,rgba(12,16,12,.1) 70%,rgba(12,16,12,.29));
+}
+.ridge-caption {
+  position:absolute;
+  z-index:1;
+  inset:auto clamp(1.5rem,3vw,3.6rem) clamp(1.5rem,2.6vw,3.2rem);
+  display:grid;
+  grid-template-columns:var(--editorial-columns);
+  align-items:end;
+  gap:var(--column-gap);
+}
+.ridge-location { justify-self:start; padding:.18rem .6rem; border-radius:999px; background:#222521e8; font-size:.8125rem; line-height:1.45; }
+.hero-description {
+  max-width:31em;
+  margin:0;
+  color:inherit;
+  text-align:left;
+  text-wrap:pretty;
+  font-size:clamp(1.15rem,1.57cqi,1.75rem);
+  letter-spacing:-.025em;
+  line-height:1.35;
+}
+.audience-routes { gap:var(--column-gap); margin-top:0; }
+.audience-route {
+  align-items:center;
+  padding:clamp(1.4rem,2.1vw,2.5rem) 0;
+  min-height:0;
+  gap:1.5rem;
+  border:0;
+  border-bottom:1px solid var(--line);
+  border-radius:0;
+  background:transparent;
+  color:var(--ink);
+  transition:background-color 160ms var(--motion-ease);
+}
+.audience-route h2{font-size:clamp(1.375rem,1.83cqi,2.1rem);margin:0 0 .25rem}
 .audience-route p{color:var(--muted)}
-.audience-route>span{align-self:flex-start;margin-top:.125rem;width:1.5rem;height:1.5rem;display:grid;place-items:center;flex-shrink:0;font-size:1.5rem;background:none;border-radius:0}
-@media(hover:hover){.audience-route:hover{background:transparent;box-shadow:none}.audience-route:hover h2{text-decoration:underline;text-underline-offset:.2em}}
+.audience-route>span {
+  width:2.75rem;
+  height:2.75rem;
+  display:grid;
+  place-items:center;
+  flex-shrink:0;
+  border:1px solid var(--line);
+  border-radius:50%;
+}
+.audience-route>span svg{width:1.25rem;height:1.25rem}
+@media(hover:hover){
+ .audience-route:hover{background:transparent;box-shadow:none}
+ .audience-route:hover h2{text-decoration:underline;text-underline-offset:.2em}
+ .audience-route:hover>span{background:var(--ink);border-color:var(--ink);color:var(--paper)}
+}
 .audience-route:active{transform:none;background:var(--soft)}
 
 /* One shared grid replaces the competing section-specific column ratios. */
 .about-story,.talent-intro,.talent-stage,.brand-intro,.process .section-heading{display:grid;grid-template-columns:var(--editorial-columns);gap:var(--column-gap)}
-.editorial-about{background:none;border-radius:0;padding:0}.about-composition{padding:clamp(2rem,3.5vw,4rem) 0 0;border-top:1px solid var(--line)}.about-story{align-items:start}
+.editorial-about{background:none;border-radius:0;padding:0}.about-composition{padding:0}.about-story{align-items:start}
 .editorial-about .about-story h2{font-size:clamp(2.25rem,4.15cqi,4.75rem);line-height:1.05}
 .about-story-copy{display:flex;flex-direction:column;gap:1.25rem;margin:0;max-width:29rem}.about-story-copy p{font-size:1rem;line-height:1.8;max-width:27em}.about-story-copy p:first-child{color:var(--ink)}
 .about-story h2 .reveal-line{display:block;width:fit-content;max-width:100%;color:var(--ink)}
@@ -61,6 +142,11 @@ html.ink-reveal .about-story h2 .reveal-line{color:var(--ink);-webkit-text-fill-
 /* Brands: matching text edges from the introduction through every service. */
 .audience-view .editorial-brands{margin-top:0;padding-bottom:2rem}
 .brand-intro,.audience-view .brand-intro{align-items:start;padding:clamp(2.5rem,4vw,4.5rem) 0 clamp(2.5rem,4vw,4rem)}.brand-intro>div{padding-top:0}.brand-intro p{font-size:clamp(1.125rem,1.5cqi,1.75rem);line-height:1.6;max-width:29em;color:var(--ink)}.brand-intro .button{margin-top:1.5rem;min-height:2.75rem;font-size:1rem;background:var(--lime);color:var(--ink)}.brand-intro .button:hover{background:#b8e91b}
+.business-guide {
+  display:inline-flex; align-items:center; min-height:2.75rem; margin:1rem 0 0 .75rem;
+  padding:0 .3rem; font-size:.9375rem; text-decoration:underline; text-underline-offset:.22em;
+}
+.business-guide:hover { text-decoration-thickness:2px; }
 .service-list{border-bottom:1px solid var(--line)}
 .service-row{position:relative;display:grid;grid-template-columns:var(--editorial-columns);column-gap:var(--column-gap);row-gap:1.5rem;padding:clamp(2rem,3.25vw,3.5rem) 0;border-top:1px solid var(--line);align-items:start}
 .audience-view .service-row h3{font:500 clamp(1.75rem,2.8cqi,3.25rem)/1.16 Arial,Helvetica,sans-serif;letter-spacing:-.04em;max-width:12em}.service-row>div{padding-right:clamp(4rem,6vw,5.25rem)}.service-row p{font-size:inherit;line-height:1.7;max-width:32em}.service-scope{display:block;font-size:.875rem;margin-top:1rem;color:var(--muted)}
@@ -72,11 +158,16 @@ html.ink-reveal .about-story h2 .reveal-line{color:var(--ink);-webkit-text-fill-
 .enquiry-heading h2{font-size:clamp(3rem,6vw,6rem);margin:0 0 1.25rem;line-height:1.05}.enquiry-heading p{font-size:1.125rem;line-height:1.65;max-width:26em}.enquiry-heading .small-mark{width:2.25rem;margin-top:2rem}
 .enquiry-fields{padding:0;align-self:start;border-radius:0;background:transparent}.enquiry-fields [type=submit]{background:var(--lime);color:var(--ink)}.enquiry-fields [type=submit]:hover{background:#b8e91b}.enquiry-fields .field label{font-weight:600}.enquiry-fields input,.enquiry-fields textarea,.enquiry-fields select{border-radius:.5rem}.enquiry-fields .button{padding-inline:clamp(.75rem,4vw,1.5rem);gap:clamp(.5rem,3vw,1.5rem)}.enquiry-fields .button:disabled{opacity:.65}
 
-/* One clear closing action, with no inset panel or duplicated audience cards. */
-.contact-invitation{display:grid;grid-template-columns:var(--editorial-columns);gap:var(--column-gap);align-items:start;padding:clamp(2rem,3.5vw,4rem) 0 0;border-top:1px solid var(--line);border-radius:0;background:none;color:var(--ink)}
-.contact-invitation h2{font-size:clamp(2.5rem,4.6cqi,5.25rem);margin:0;line-height:1.05}
-.contact-invitation p{color:var(--muted);font-size:1.125rem;line-height:1.65}
-.contact-invitation .button{margin-top:1.5rem;font-size:1rem;min-height:2.75rem}
+/* A full-width closing band keeps the same text edges as the opening. */
+.contact-band { color:var(--paper); background:var(--ink); --focus-ring:var(--lime); }
+.contact-invitation {
+  display:grid; grid-template-columns:var(--editorial-columns); gap:var(--column-gap);
+  align-items:center; padding:clamp(3rem,5vw,6rem) 0; border:0; border-radius:0;
+  background:transparent; color:inherit; overflow:visible;
+}
+.contact-invitation h2{font-size:clamp(2.7rem,5.35cqi,6rem);margin:0;line-height:1.01}
+.contact-invitation p{color:#dbddd5;font-size:1.125rem;line-height:1.5}
+.contact-invitation .button{margin-top:1.25rem;font-size:1rem;min-height:2.75rem}
 .footer{padding-bottom:2rem}
 .footer .brand{width:2.75rem;min-height:2.75rem;display:grid;align-content:center}.footer .brand img{width:2rem;height:auto}
 .footer-top{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);gap:2rem;align-items:center;padding-bottom:2rem}
@@ -87,6 +178,10 @@ html.ink-reveal .about-story h2 .reveal-line{color:var(--ink);-webkit-text-fill-
 @media(max-width:900px){
  .enquiry-layout{grid-template-columns:1fr;gap:1.5rem;max-width:38rem;padding-top:1rem}.enquiry-heading h2{font-size:3.25rem;margin:0 0 1rem}.enquiry-heading .eyebrow,.enquiry-heading .small-mark{display:none}.enquiry-heading p{font-size:1rem;max-width:30em}.service-row>div{padding-right:3.5rem}
 }
+@media(min-width:761px) and (max-width:1050px){
+ .ridge-plate{aspect-ratio:2.7}
+ .hero-description{font-size:1.125rem}
+}
 @media(max-width:760px){
  :root{--brand-size:min(7.5rem,34vw);--header-height:5.25rem;--column-gap:1.75rem}
  /* The menu shares the header edge instead of floating in a second inset card. */
@@ -94,7 +189,19 @@ html.ink-reveal .about-story h2 .reveal-line{color:var(--ink);-webkit-text-fill-
  .mobile-menu a{font-size:clamp(1.5rem,7vw,2rem);padding:1.25rem 0;min-height:3.5rem;border:0;border-bottom:1px solid var(--line)}
  .mobile-menu a+a{border-top:0}
  .mobile-menu button{align-self:flex-start;width:auto;min-height:3rem;margin-top:1.5rem;padding:.875rem 1.5rem;border-radius:999px;background:var(--lime);color:var(--ink);font-size:1rem;font-weight:600;text-align:center}
- .header{grid-template-columns:minmax(0,1fr) auto}.audience-routes{gap:0}.audience-route{min-height:0;gap:1rem}.audience-route>span{width:1.5rem;height:1.5rem}.audience-route p{font-size:1rem}
+ .header{grid-template-columns:minmax(0,1fr) auto}
+ .intro{padding-top:clamp(1.3rem,4.7vw,2rem)}
+ .intro h1{display:block;font-size:12.78cqi;line-height:1.02;letter-spacing:-.023em}
+ .ridge-plate{aspect-ratio:1.45;margin-top:1.15rem}
+ .ridge-plate>img{object-position:42% 32%}
+ .ridge-plate::after{background:linear-gradient(0deg,rgba(12,15,13,.89),rgba(12,15,13,.59) 25%,transparent 61%)}
+ .ridge-caption{inset:0;display:flex;align-items:flex-end;padding:1.25rem}
+ .ridge-location{position:absolute;top:.85rem;right:1rem;padding:.15rem .5rem;border-radius:1rem;background:#252823e8;font-size:.75rem}
+ .hero-description{font-size:clamp(1rem,3.45cqi,1.3rem);max-width:30em;line-height:1.38}
+ .audience-routes{gap:0}
+ .audience-route{min-height:0;gap:1rem;padding-block:1.15rem}
+ .audience-route p{font-size:1rem}
+ .business-guide{margin:1rem 0 0 .5rem}
  .about-story,.talent-intro,.talent-stage,.brand-intro,.process .section-heading{grid-template-columns:1fr}.editorial-about .about-story h2{font-size:clamp(2rem,8.5cqi,3rem)}.about-story-copy{gap:1rem}
  .enquiry-top,.enquiry-view.show-audience .enquiry-top{grid-template-columns:minmax(0,1fr) auto;gap:.75rem;padding-block:1rem}.enquiry-close{grid-column:2}.view-navigation{grid-row:2;grid-column:1/-1;width:100%;justify-self:center;border-radius:var(--control-radius)}.view-navigation button{font-size:.9375rem;padding:.5rem .75rem}.view-navigation:before{border-radius:.5rem}.enquiry-view{scroll-padding-top:10rem}
  .audience-view .editorial-talent{padding-top:0}.audience-view .editorial-brands{margin-top:0}
@@ -107,6 +214,9 @@ html.ink-reveal .about-story h2 .reveal-line{color:var(--ink);-webkit-text-fill-
  .process .section-heading{gap:1rem}.process .section-heading h2{font-size:1.75rem}
  .contact-invitation{grid-template-columns:1fr;gap:1.5rem}.contact-invitation h2{font-size:clamp(2.25rem,10cqi,3.5rem)}
  .footer-top{grid-template-columns:1fr;gap:1.5rem;align-items:start}.footer-top nav{justify-content:flex-start;gap:.5rem 1.5rem}
+}
+@media(max-width:440px){
+ .ridge-plate{aspect-ratio:1.16}
 }
 @media(max-height:500px){
  .enquiry-top,.enquiry-view.show-audience .enquiry-top{min-height:3.75rem;padding-block:.5rem;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr)}.enquiry-top .brand{width:min(6.25rem,25vw)}.enquiry-close{grid-column:3;font-size:1rem;min-height:2.75rem}.view-navigation{grid-row:auto;grid-column:2;width:auto;border-radius:999px}.view-navigation:before{border-radius:inherit}.view-navigation button{font-size:.875rem;padding-inline:.75rem}.enquiry-view{scroll-padding-top:5rem}
